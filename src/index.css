@@ -1,0 +1,122 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+}
+
+/* -----------------------------------------------------------
+   SCROLLBAR
+----------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* -----------------------------------------------------------
+   ANIMATIONS
+----------------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* -----------------------------------------------------------
+   GLASS EFFECT
+----------------------------------------------------------- */
+.glass {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* -----------------------------------------------------------
+   BUTTONS
+----------------------------------------------------------- */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600
+         hover:opacity-90 active:scale-[0.97]
+         text-white font-medium
+         py-2.5 px-6 rounded-lg
+         transition-all duration-200 shadow-lg;
+}
+
+.btn-secondary {
+  @apply bg-gray-600 hover:bg-gray-700
+         text-white font-medium
+         py-2.5 px-6 rounded-lg
+         transition-all duration-200;
+}
+
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700
+         text-white font-medium
+         py-2.5 px-6 rounded-lg
+         transition-all duration-200;
+}
+
+/* -----------------------------------------------------------
+   CARD
+----------------------------------------------------------- */
+.card {
+  @apply bg-white/80 backdrop-blur-xl
+         rounded-xl shadow-lg border border-white/30
+         transition-all duration-300 hover:shadow-2xl;
+}
+
+/* -----------------------------------------------------------
+   INPUTS
+----------------------------------------------------------- */
+.input-field {
+  @apply w-full px-4 py-3 rounded-lg
+         bg-white/70 border border-gray-300
+         focus:ring-2 focus:ring-blue-500
+         focus:border-blue-500 transition-all;
+}
+
+/* -----------------------------------------------------------
+   BADGES
+----------------------------------------------------------- */
+.status-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.status-active   { @apply bg-green-100 text-green-800; }
+.status-inactive { @apply bg-red-100 text-red-800; }
+.status-pending  { @apply bg-yellow-100 text-yellow-800; }
+
+/* -----------------------------------------------------------
+   UTILITY CARDS
+----------------------------------------------------------- */
+.stat-card {
+  @apply bg-white/70 backdrop-blur-xl
+         p-6 rounded-lg border border-gray-200
+         shadow transition-all duration-200 hover:shadow-xl;
+}
+
+.quick-action {
+  @apply bg-white p-5 rounded-lg border border-gray-200
+         hover:border-blue-300 hover:shadow-md
+         transition-all duration-200 cursor-pointer;
+}
