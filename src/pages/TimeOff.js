@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { timeoffAPI } from '../apis/timeoffAPI';
 import { employeeAPI } from '../apis/employeeAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 // ---------- Helpers ----------
@@ -126,6 +127,7 @@ const TimeOff = () => {
   });
 
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -187,7 +189,7 @@ const TimeOff = () => {
       applyFilter('all', timeoffData);
     } catch (err) {
       console.error('Error loading initial data:', err);
-      setError(err.response?.data?.message || 'Failed to load data');
+      setError(err.response?.data?.message || t.timeOff.noTimeOffs);
     } finally {
       setLoading(false);
     }
@@ -224,7 +226,7 @@ const TimeOff = () => {
       applyFilter(selectedEmployee, data);
     } catch (err) {
       console.error('Error reloading time offs:', err);
-      setError(err.response?.data?.message || 'Failed to reload time off records');
+      setError(err.response?.data?.message || t.timeOff.noTimeOffs);
     }
   };
 
@@ -236,7 +238,7 @@ const TimeOff = () => {
     try {
       // Validate employee selection
       if (!formData.employeeId) {
-        setError('Please select an employee.');
+        setError(t.timeOff.selectEmployeeFirst);
         return;
       }
 
@@ -264,14 +266,13 @@ const TimeOff = () => {
       } 
       // 3) Specific time range
       else if (formData.startLocal && formData.endLocal && !formData.date) {
-        // Format the datetime-local inputs properly for the backend
         timeOffData.startLocal = `${formData.startLocal}:00`;
         timeOffData.endLocal = `${formData.endLocal}:00`;
         console.log('Creating specific time range off with data:', timeOffData);
       } 
       // Invalid combination
       else {
-        setError('Please provide either: a full date OR start/end times OR recurring schedule. Do not mix types.');
+        setError(t.timeOff.mixedTypeError);
         return;
       }
 
@@ -279,7 +280,7 @@ const TimeOff = () => {
       const response = await timeoffAPI.createTimeOff(timeOffData);
       console.log('API Response:', response);
 
-      setSuccess('Time off created successfully!');
+      setSuccess(t.timeOff.timeOffCreated);
       setShowCreateForm(false);
 
       // Reset form but keep employee selection
@@ -304,7 +305,7 @@ const TimeOff = () => {
       setError(
         err.response?.data?.message ||
         err.response?.data?.error ||
-        'Failed to create time off. Please check your input and try again.'
+        t.timeOff.mixedTypeError
       );
     }
   };
@@ -315,7 +316,7 @@ const TimeOff = () => {
     setSuccess('');
 
     if (!holidayForm.date) {
-      setError('Please select a date for the holiday.');
+      setError(t.timeOff.holidayDate);
       return;
     }
 
@@ -325,7 +326,7 @@ const TimeOff = () => {
         reason: holidayForm.reason || 'Holiday'
       });
 
-      setSuccess('Holiday created for all employees!');
+      setSuccess(t.timeOff.holidayCreated);
       setShowHolidayForm(false);
       setHolidayForm({ date: '', reason: '' });
 
@@ -334,20 +335,20 @@ const TimeOff = () => {
       console.error('Error creating holiday:', err);
       setError(
         err.response?.data?.message ||
-        'Failed to create holiday for all employees.'
+        t.timeOff.holidayCreated
       );
     }
   };
 
   const handleDeleteTimeOff = async (id) => {
-    if (window.confirm('Are you sure you want to delete this time off record?')) {
+    if (window.confirm(t.timeOff.deleteConfirm)) {
       try {
         await timeoffAPI.deleteTimeOff(id);
-        setSuccess('Time off deleted successfully!');
+        setSuccess(t.timeOff.timeOffDeleted);
         reloadTimeOffs();
       } catch (err) {
         console.error('Error deleting time off:', err);
-        setError(err.response?.data?.message || 'Failed to delete time off');
+        setError(err.response?.data?.message || t.timeOff.timeOffDeleted);
       }
     }
   };
@@ -396,7 +397,7 @@ const TimeOff = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -404,16 +405,16 @@ const TimeOff = () => {
 
   const selectedEmployeeName =
     selectedEmployee === 'all'
-      ? 'All Employees'
-      : employees.find(emp => emp._id === selectedEmployee)?.name || 'Employee';
+      ? t.timeOff.allEmployees
+      : employees.find(emp => emp._id === selectedEmployee)?.name || t.timeOff.employee;
 
   return (
     <div className="dashboard-container">
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Time Off Management</h1>
-          <p className="dash-welcome">Manage employee availability and time off</p>
+          <h1 className="dash-title">{t.timeOff.title}</h1>
+          <p className="dash-welcome">{t.timeOff.subtitle}</p>
         </div>
 
         <div className="flex gap-3">
@@ -422,7 +423,7 @@ const TimeOff = () => {
             className="btn-secondary"
             style={{ maxWidth: '260px' }}
           >
-            Create Holiday for All
+            {t.timeOff.createHolidayForAll}
           </button>
 
           <button
@@ -430,20 +431,20 @@ const TimeOff = () => {
             className="btn-primary"
             style={{ maxWidth: '200px' }}
           >
-            Add Time Off
+            {t.timeOff.addTimeOff}
           </button>
         </div>
       </div>
 
       {/* Employee Filter */}
       <div className="card-surface mb-6">
-        <label className="form-label block mb-2">Filter by Employee</label>
+        <label className="form-label block mb-2">{t.timeOff.filterByEmployee}</label>
         <select
           value={selectedEmployee}
           onChange={(e) => setSelectedEmployee(e.target.value)}
           className="input"
         >
-          <option value="all">All employees</option>
+          <option value="all">{t.timeOff.allEmployees}</option>
           {employees.map(emp => (
             <option key={emp._id} value={emp._id}>{emp.name}</option>
           ))}
@@ -466,7 +467,7 @@ const TimeOff = () => {
       {showCreateForm && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">Add Time Off</h3>
+            <h3 className="section-title">{t.timeOff.addTimeOff}</h3>
             <button
               onClick={() => {
                 setShowCreateForm(false);
@@ -475,14 +476,14 @@ const TimeOff = () => {
               }}
               className="text-gray-400 hover:text-gray-600"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
           
           <form onSubmit={handleCreateTimeOff} className="space-y-4">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Employee *</label>
+                <label className="form-label">{t.timeOff.selectEmployee} *</label>
                 <select
                   name="employeeId"
                   value={formData.employeeId}
@@ -490,7 +491,7 @@ const TimeOff = () => {
                   className="input"
                   required
                 >
-                  <option value="">Select an employee</option>
+                  <option value="">{t.timeOff.selectEmployee}</option>
                   {employees.map(emp => (
                     <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
@@ -498,7 +499,7 @@ const TimeOff = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Type *</label>
+                <label className="form-label">{t.timeOff.type} *</label>
                 <select
                   value={formData.recurring.isRecurring ? 'recurring' : 'single'}
                   onChange={(e) =>
@@ -507,15 +508,15 @@ const TimeOff = () => {
                   className="input"
                   required
                 >
-                  <option value="single">Single Occurrence</option>
-                  <option value="recurring">Recurring Weekly</option>
+                  <option value="single">{t.timeOff.singleOccurrence}</option>
+                  <option value="recurring">{t.timeOff.recurringWeekly}</option>
                 </select>
               </div>
 
               {!formData.recurring.isRecurring ? (
                 <>
                   <div className="form-group">
-                    <label className="form-label">Full Day Date</label>
+                    <label className="form-label">{t.timeOff.fullDayDate}</label>
                     <input
                       type="date"
                       name="date"
@@ -524,11 +525,11 @@ const TimeOff = () => {
                       className="input"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      For full day off only
+                      {t.timeOff.fullDayOnly}
                     </p>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Start Date & Time</label>
+                    <label className="form-label">{t.timeOff.startDateTime}</label>
                     <input
                       type="datetime-local"
                       name="startLocal"
@@ -538,11 +539,11 @@ const TimeOff = () => {
                       min={getCurrentDateTimeForInput()}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      For specific time off
+                      {t.timeOff.specificTime}
                     </p>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">End Date & Time</label>
+                    <label className="form-label">{t.timeOff.endDateTime}</label>
                     <input
                       type="datetime-local"
                       name="endLocal"
@@ -556,7 +557,7 @@ const TimeOff = () => {
               ) : (
                 <>
                   <div className="form-group">
-                    <label className="form-label">Day of Week *</label>
+                    <label className="form-label">{t.timeOff.dayOfWeek} *</label>
                     <select
                       value={formData.recurring.dayOfWeek}
                       onChange={(e) =>
@@ -565,17 +566,17 @@ const TimeOff = () => {
                       className="input"
                       required
                     >
-                      <option value={0}>Sunday</option>
-                      <option value={1}>Monday</option>
-                      <option value={2}>Tuesday</option>
-                      <option value={3}>Wednesday</option>
-                      <option value={4}>Thursday</option>
-                      <option value={5}>Friday</option>
-                      <option value={6}>Saturday</option>
+                      <option value={0}>{t.timeOff.sunday}</option>
+                      <option value={1}>{t.timeOff.monday}</option>
+                      <option value={2}>{t.timeOff.tuesday}</option>
+                      <option value={3}>{t.timeOff.wednesday}</option>
+                      <option value={4}>{t.timeOff.thursday}</option>
+                      <option value={5}>{t.timeOff.friday}</option>
+                      <option value={6}>{t.timeOff.saturday}</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Start Time *</label>
+                    <label className="form-label">{t.timeOff.startTime} *</label>
                     <input
                       type="time"
                       value={formData.recurring.startTime}
@@ -587,7 +588,7 @@ const TimeOff = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">End Time *</label>
+                    <label className="form-label">{t.timeOff.endTime} *</label>
                     <input
                       type="time"
                       value={formData.recurring.endTime}
@@ -602,25 +603,25 @@ const TimeOff = () => {
               )}
 
               <div className="md:col-span-2 form-group">
-                <label className="form-label">Reason</label>
+                <label className="form-label">{t.timeOff.reason}</label>
                 <input
                   type="text"
                   name="reason"
                   value={formData.reason}
                   onChange={handleInputChange}
                   className="input"
-                  placeholder="Reason for time off (optional)"
+                  placeholder={t.timeOff.reasonPlaceholder}
                 />
               </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Instructions:</h4>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">{t.timeOff.instructions}</h4>
               <ul className="text-xs text-blue-600 space-y-1">
-                <li>• <strong>Full day off:</strong> Only fill the date field</li>
-                <li>• <strong>Specific hours:</strong> Fill start and end date/time fields</li>
-                <li>• <strong>Recurring:</strong> Select day of week and times</li>
-                <li>• <strong>Important:</strong> Do not mix full day date with specific times</li>
+                <li>• <strong>{t.timeOff.fullDayDate}:</strong> {t.timeOff.instrFullDay}</li>
+                <li>• <strong>Specific hours:</strong> {t.timeOff.instrSpecific}</li>
+                <li>• <strong>{t.timeOff.recurring}:</strong> {t.timeOff.instrRecurring}</li>
+                <li>• <strong>Important:</strong> {t.timeOff.instrMixWarning}</li>
               </ul>
             </div>
 
@@ -630,7 +631,7 @@ const TimeOff = () => {
                 className="btn-primary"
                 style={{ maxWidth: '200px' }}
               >
-                Create Time Off
+                {t.timeOff.createTimeOff}
               </button>
               <button
                 type="button"
@@ -641,7 +642,7 @@ const TimeOff = () => {
                 }}
                 className="btn-secondary"
               >
-                Cancel
+                {t.common.cancel}
               </button>
             </div>
           </form>
@@ -652,7 +653,7 @@ const TimeOff = () => {
       {showHolidayForm && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">Create Holiday for All Employees</h3>
+            <h3 className="section-title">{t.timeOff.holidayForAllEmployees}</h3>
             <button
               onClick={() => {
                 setShowHolidayForm(false);
@@ -661,14 +662,14 @@ const TimeOff = () => {
               }}
               className="text-gray-400 hover:text-gray-600"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
 
           <form onSubmit={handleCreateHoliday} className="space-y-4">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Holiday Date *</label>
+                <label className="form-label">{t.timeOff.holidayDate} *</label>
                 <input
                   type="date"
                   value={holidayForm.date}
@@ -681,7 +682,7 @@ const TimeOff = () => {
               </div>
 
               <div className="md:col-span-2 form-group">
-                <label className="form-label">Reason / Name of Holiday</label>
+                <label className="form-label">{t.timeOff.holidayReason}</label>
                 <input
                   type="text"
                   value={holidayForm.reason}
@@ -695,10 +696,10 @@ const TimeOff = () => {
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-amber-800 mb-2">Note</h4>
+              <h4 className="text-sm font-medium text-amber-800 mb-2">{t.timeOff.holidayNote}</h4>
               <ul className="text-xs text-amber-700 space-y-1">
-                <li>• This will create a full-day time off for every active employee.</li>
-                <li>• Existing overlapping time-offs will be skipped by the backend.</li>
+                <li>• {t.timeOff.holidayNoteText}</li>
+                <li>• {t.timeOff.holidaySkipText}</li>
               </ul>
             </div>
 
@@ -708,7 +709,7 @@ const TimeOff = () => {
                 className="btn-primary"
                 style={{ maxWidth: '240px' }}
               >
-                Create Holiday for All
+                {t.timeOff.createHolidayForAll}
               </button>
               <button
                 type="button"
@@ -719,7 +720,7 @@ const TimeOff = () => {
                 }}
                 className="btn-secondary"
               >
-                Cancel
+                {t.common.cancel}
               </button>
             </div>
           </form>
@@ -730,7 +731,7 @@ const TimeOff = () => {
       <div className="card-surface">
         <div className="flex items-center justify-between mb-4">
           <h3 className="section-title">
-            Time Off Records – {selectedEmployeeName}
+            {t.timeOff.timeOffRecords} – {selectedEmployeeName}
           </h3>
         </div>
 
@@ -740,13 +741,13 @@ const TimeOff = () => {
             onClick={() => setActiveTab('upcoming')}
             className={`tab-button ${activeTab === 'upcoming' ? 'tab-active' : ''}`}
           >
-            Upcoming ({upcomingTimeOffs.length})
+            {t.timeOff.upcoming} ({upcomingTimeOffs.length})
           </button>
           <button
             onClick={() => setActiveTab('archive')}
             className={`tab-button ${activeTab === 'archive' ? 'tab-active' : ''}`}
           >
-            Archive ({archivedTimeOffs.length})
+            {t.timeOff.archive} ({archivedTimeOffs.length})
           </button>
         </div>
 
@@ -758,12 +759,12 @@ const TimeOff = () => {
               </svg>
             </div>
             <h3 className="empty-title">
-              {activeTab === 'upcoming' ? 'No upcoming time off records' : 'No archived time off records'}
+              {activeTab === 'upcoming' ? t.timeOff.noUpcoming : t.timeOff.noArchived}
             </h3>
             <p className="empty-description">
               {activeTab === 'upcoming' 
-                ? 'All upcoming time off requests will appear here'
-                : 'Past time off records will appear here'}
+                ? t.timeOff.upcomingDesc
+                : t.timeOff.archivedDesc}
             </p>
           </div>
         ) : (
@@ -775,13 +776,13 @@ const TimeOff = () => {
                     <p className="stat-value text-lg mb-2 flex items-center gap-2 flex-wrap">
                       {formatTimeOff(timeoff)}
                       <span className={getTimeOffTypeClass(timeoff)}>
-                        {timeoff.recurring?.isRecurring ? 'Recurring' : 
-                         (timeoff.date && !timeoff.startLocal && !timeoff.endLocal) ? 'Full Day' : 
-                         'Single'}
+                        {timeoff.recurring?.isRecurring ? t.timeOff.typeRecurring : 
+                         (timeoff.date && !timeoff.startLocal && !timeoff.endLocal) ? t.timeOff.typeFullDay : 
+                         t.timeOff.typeSingle}
                       </span>
                       {!timeoff.employeeId && (
                         <span className="preset-badge" style={{ background: '#fef3c7', color: '#92400e' }}>
-                          Holiday (All)
+                          {t.timeOff.holiday}
                         </span>
                       )}
                     </p>
@@ -792,21 +793,21 @@ const TimeOff = () => {
                   {timeoff.employeeId && (
                     <div className="info-item">
                       <span className="info-dot" />
-                      <span>Employee: <strong>{timeoff.employeeId.name}</strong></span>
+                      <span>{t.timeOff.employee}: <strong>{timeoff.employeeId.name}</strong></span>
                     </div>
                   )}
 
                   {timeoff.reason && (
                     <div className="info-item">
                       <span className="info-dot" />
-                      <span>Reason: {timeoff.reason}</span>
+                      <span>{t.timeOff.reason2}: {timeoff.reason}</span>
                     </div>
                   )}
 
                   <div className="info-item">
                     <span className="info-dot" />
                     <span className="text-xs text-gray-500">
-                      Created: {new Date(timeoff.createdAt).toLocaleDateString()}
+                      {t.timeOff.created}: {new Date(timeoff.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -816,7 +817,7 @@ const TimeOff = () => {
                     onClick={() => handleDeleteTimeOff(timeoff._id)}
                     className="action-btn action-secondary"
                   >
-                    Delete
+                    {t.common.delete}
                   </button>
                 </div>
               </div>

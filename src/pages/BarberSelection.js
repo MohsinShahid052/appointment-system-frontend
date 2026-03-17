@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { employeeAPI } from '../apis/employeeAPI';
 import { useToast } from '../components/Toast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BarberSelection = ({
   barbershopId,
@@ -11,6 +12,7 @@ const BarberSelection = ({
   initialBarber = null
 }) => {
   const toast = useToast();
+  const { t } = useLanguage();
   const [employees, setEmployees] = useState([]);
   const [selectedBarber, setSelectedBarber] = useState(initialBarber);
   const [loading, setLoading] = useState(true);
@@ -75,14 +77,14 @@ const BarberSelection = ({
         console.log('✅ Filtered available employees:', availableEmployees);
         
         if (availableEmployees.length === 0) {
-          toast.warning('No barbers available for this service');
+          toast.warning(t.booking.noBarbers);
         }
       }
 
       setEmployees(availableEmployees);
     } catch (err) {
       console.error('Error loading barbers:', err);
-      const errorMessage = err.userMessage || 'Failed to load barbers';
+      const errorMessage = err.userMessage || t.booking.loadingBarbers;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -103,7 +105,7 @@ const BarberSelection = ({
     return (
       <div className="widget-step">
         <div className="loading-spinner mx-auto mb-4"></div>
-        <p className="text-center text-gray-600">Loading barbers...</p>
+        <p className="text-center text-gray-600">{t.booking.loadingBarbers}</p>
       </div>
     );
   }
@@ -111,11 +113,11 @@ const BarberSelection = ({
   return (
     <div className="widget-step">
       <div className="step-header">
-        <h2 className="step-title">Choose Barber</h2>
+        <h2 className="step-title">{t.booking.chooseBarber}</h2>
         <p className="step-description">
           {selectedService 
-            ? `Select your preferred barber for ${selectedService.name}`
-            : 'Select your preferred barber'}
+            ? `${t.booking.chooseBarberDesc} ${selectedService.name}`
+            : t.booking.chooseBarberGeneral}
         </p>
       </div>
 
@@ -123,15 +125,15 @@ const BarberSelection = ({
 
       {employees.length === 0 ? (
         <div className="empty-state">
-          <h3 className="empty-title">No barbers available</h3>
+          <h3 className="empty-title">{t.booking.noBarbers}</h3>
           <p className="empty-description">
             {selectedService 
-              ? `No barbers are currently assigned to ${selectedService.name}.`
-              : 'No active barbers found.'}
+              ? `${t.booking.noBarbersForService} ${selectedService.name}.`
+              : t.booking.noBarbersDesc}
           </p>
           {onBack && (
             <button onClick={onBack} className="btn-primary">
-              Back
+              {t.booking.back}
             </button>
           )}
         </div>
@@ -173,8 +175,7 @@ const BarberSelection = ({
                   )}
                   {Array.isArray(emp.services) && (
                     <p className="barber-services">
-                      {emp.services.length} service
-                      {emp.services.length !== 1 ? 's' : ''} assigned
+                      {emp.services.length} {emp.services.length !== 1 ? t.booking.servicesAssigned : t.booking.serviceAssigned}
                     </p>
                   )}
                 </div>
@@ -188,14 +189,14 @@ const BarberSelection = ({
 
           <div className="step-actions">
             <button onClick={onBack} className="btn-secondary">
-              Back
+              {t.booking.back}
             </button>
             <button
               onClick={handleNext}
               disabled={!selectedBarber}
               className="btn-primary"
             >
-              Next: Choose Time
+              {t.booking.nextChooseTime}
             </button>
           </div>
         </>

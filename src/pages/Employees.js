@@ -3,6 +3,7 @@ import { employeeAPI } from '../apis/employeeAPI';
 import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Employees = () => {
   const [allEmployees, setAllEmployees] = useState([]);
@@ -17,6 +18,7 @@ const Employees = () => {
   const [barbershopCurrency, setBarbershopCurrency] = useState('EUR');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -191,7 +193,7 @@ const Employees = () => {
   };
 
   const handleDeleteEmployee = async (id, employeeName) => {
-    if (window.confirm(`Are you sure you want to deactivate ${employeeName}?`)) {
+    if (window.confirm(`${t.employees.deactivateConfirm} ${employeeName}?`)) {
       setError('');
       setSuccess('');
       
@@ -267,7 +269,7 @@ const Employees = () => {
   // Helper function to display services
   const renderServices = (services) => {
     if (!services || services.length === 0) {
-      return <span className="text-gray-500 text-sm">No services assigned</span>;
+      return <span className="text-gray-500 text-sm">{t.employees.noServicesAssigned}</span>;
     }
 
     // Show first 2-3 services with details
@@ -299,8 +301,8 @@ const Employees = () => {
 
   // Helper function to get service count text
   const getServiceCountText = (services) => {
-    if (!services || services.length === 0) return 'No services';
-    return `${services.length} service${services.length !== 1 ? 's' : ''}`;
+    if (!services || services.length === 0) return t.employees.noServicesFound;
+    return `${services.length} ${t.employees.services}`;
   };
 
   const filteredEmployees = getFilteredEmployees();
@@ -312,7 +314,7 @@ const Employees = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading employees...</p>
+          <p className="text-gray-600">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -323,8 +325,8 @@ const Employees = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Employees</h1>
-          <p className="dash-welcome">Manage your barbershop team and their services</p>
+          <h1 className="dash-title">{t.employees.title}</h1>
+          <p className="dash-welcome">{t.employees.subtitle}</p>
           {/* Debug info */}
           <div className="text-xs text-gray-500 mt-1">
             Total: {allEmployees.length} | Active: {activeCount} | Inactive: {inactiveCount}
@@ -335,7 +337,7 @@ const Employees = () => {
           className="btn-primary"
           style={{maxWidth: '200px'}}
         >
-          Add Employee
+          {t.employees.addEmployee}
         </button>
       </div>
 
@@ -350,7 +352,7 @@ const Employees = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Active ({activeCount})
+            {`${t.common.active} (${activeCount})`}
           </button>
           <button
             onClick={() => setActiveFilter('inactive')}
@@ -360,7 +362,7 @@ const Employees = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Inactive ({inactiveCount})
+            {`${t.common.inactive} (${inactiveCount})`}
           </button>
           <button
             onClick={() => setActiveFilter('all')}
@@ -370,14 +372,14 @@ const Employees = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            All ({allEmployees.length})
+            {`${t.common.all} (${allEmployees.length})`}
           </button>
         </div>
 
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search employees..."
+            placeholder={t.employees.searchEmployees}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input"
@@ -402,7 +404,7 @@ const Employees = () => {
       {showCreateForm && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">Add New Employee</h3>
+            <h3 className="section-title">{t.employees.addNewEmployee}</h3>
             <button
               onClick={() => {
                 setShowCreateForm(false);
@@ -410,20 +412,20 @@ const Employees = () => {
               }}
               className="text-gray-400 hover:text-gray-600"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
           
           <form onSubmit={handleCreateEmployee} className="space-y-6">
             {/* Photo Upload Section */}
             <div className="form-group">
-              <label className="form-label">Profile Photo</label>
+              <label className="form-label">{t.employees.profilePhoto}</label>
               <div className="image-upload">
                 <div className="image-preview" style={{ borderRadius: '999px' }}>
                   {photoPreview ? (
                     <img src={photoPreview} alt="Preview" />
                   ) : (
-                    <span className="image-placeholder">No photo</span>
+                    <span className="image-placeholder">{t.common.noPhoto}</span>
                   )}
                 </div>
 
@@ -435,14 +437,14 @@ const Employees = () => {
                       onChange={handlePhotoUpload}
                       className="hidden"
                     />
-                    {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                    {uploadingPhoto ? t.common.uploading : t.common.uploadPhoto}
                   </label>
                   <button
                     type="button"
                     onClick={handleTakePhoto}
                     className="btn-secondary"
                   >
-                    Take Photo
+                    {t.common.takePhoto}
                   </button>
                   {photoPreview && (
                     <button
@@ -450,7 +452,7 @@ const Employees = () => {
                       onClick={handleRemovePhoto}
                       className="btn-secondary"
                     >
-                      Remove
+                      {t.common.remove}
                     </button>
                   )}
                   <p className="image-hint">JPG/PNG up to ~1MB after compression</p>
@@ -460,7 +462,7 @@ const Employees = () => {
 
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Full Name *</label>
+                <label className="form-label">{`${t.employees.fullName} *`}</label>
                 <input
                   type="text"
                   name="name"
@@ -473,22 +475,22 @@ const Employees = () => {
               </div>
               
               <div className="form-group">
-                <label className="form-label">Gender</label>
+                <label className="form-label">{t.employees.gender}</label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
                   className="input"
                 >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  <option value="">{t.employees.selectGender}</option>
+                  <option value="male">{t.employees.male}</option>
+                  <option value="female">{t.employees.female}</option>
+                  <option value="other">{t.employees.other}</option>
                 </select>
               </div>
               
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label">{t.common.email}</label>
                 <input
                   type="email"
                   name="email"
@@ -500,7 +502,7 @@ const Employees = () => {
               </div>
               
               <div className="form-group">
-                <label className="form-label">Phone</label>
+                <label className="form-label">{t.common.phone}</label>
                 <input
                   type="text"
                   name="phone"
@@ -512,7 +514,7 @@ const Employees = () => {
               </div>
               
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Notes</label>
+                <label className="form-label">{t.common.notes}</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -531,7 +533,7 @@ const Employees = () => {
                 style={{maxWidth: '200px'}}
                 disabled={uploadingPhoto}
               >
-                {uploadingPhoto ? 'Uploading...' : 'Create Employee'}
+                {uploadingPhoto ? t.common.uploading : t.employees.createEmployee}
               </button>
               <button
                 type="button"
@@ -541,7 +543,7 @@ const Employees = () => {
                 }}
                 className="btn-secondary"
               >
-                Cancel
+                {t.common.cancel}
               </button>
             </div>
           </form>
@@ -569,7 +571,7 @@ const Employees = () => {
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {employee.isActive ? 'Active' : 'Inactive'}
+                {employee.isActive ? t.common.active : t.common.inactive}
               </span>
             </div>
             
@@ -621,21 +623,21 @@ const Employees = () => {
                 onClick={() => navigate(`/employee/edit/${employee._id}`)}
                 className="action-btn action-primary"
               >
-                Edit Services
+                {t.employees.editServices}
               </button>
               {employee.isActive ? (
                 <button
                   onClick={() => handleDeleteEmployee(employee._id, employee.name)}
                   className="action-btn action-secondary"
                 >
-                  Deactivate
+                  {t.common.deactivate}
                 </button>
               ) : (
                 <button
                   onClick={() => handleRestoreEmployee(employee._id, employee.name)}
                   className="action-btn action-primary"
                 >
-                  Activate
+                  {t.common.activate}
                 </button>
               )}
             </div>
@@ -652,15 +654,15 @@ const Employees = () => {
             </svg>
           </div>
           <h3 className="empty-title">
-            {activeFilter === 'inactive' ? 'No inactive employees' :
-             activeFilter === 'active' ? 'No active employees' : 'No employees found'}
+            {activeFilter === 'inactive' ? t.employees.noInactiveEmployees :
+             activeFilter === 'active' ? t.employees.noActiveEmployees : t.employees.noEmployeesFound}
           </h3>
           <p className="empty-description">
             {searchTerm 
-              ? 'Try adjusting your search terms' 
+              ? t.employees.adjustSearch
               : activeFilter === 'inactive'
-                ? 'All employees are currently active'
-                : 'Get started by adding your first employee'
+                ? t.employees.allEmployeesActive
+                : t.employees.addFirstEmployee
             }
           </p>
           {!searchTerm && activeFilter === 'active' && (
@@ -669,7 +671,7 @@ const Employees = () => {
               className="btn-primary"
               style={{maxWidth: '200px'}}
             >
-              Add Employee
+              {t.employees.addEmployee}
             </button>
           )}
         </div>

@@ -3,9 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../apis/authApi';
 import { serviceAPI } from '../apis/serviceAPI';
+import { useLanguage } from '../contexts/LanguageContext';
 const BarbershopDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [dailyStats, setDailyStats] = useState(null);
   const [weeklyStats, setWeeklyStats] = useState(null);
@@ -92,23 +94,23 @@ const BarbershopDashboard = () => {
     </div>
   );
 
-  if (loading) return <div className="dashboard-container"><p>Loading...</p></div>;
+  if (loading) return <div className="dashboard-container"><p>{t.common.loading}</p></div>;
 
   return (
     <div className="dashboard-container fade-in">
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Barbershop Dashboard</h1>
+          <h1 className="dash-title">{t.dashboard.barbershopTitle}</h1>
           <p className="dash-welcome">
-            Welcome back{user?.email ? `, ${user.email}` : ''}
+            {t.dashboard.welcomeBack}{user?.email ? `, ${user.email}` : ''}
           </p>
           <p className="text-sm text-gray-600 mt-1">
             Currency: {barbershopCurrency} ({getCurrencySymbol()})
           </p>
         </div>
         <div className="role-badge">
-          <div className="role-label">Current Role</div>
+          <div className="role-label">{t.common.currentRole}</div>
           <div className="role-value">{user?.role}</div>
         </div>
       </div>
@@ -116,91 +118,91 @@ const BarbershopDashboard = () => {
       {/* Stats */}
       <div className="stats-grid">
         <StatCard
-          title="Today's Appointments"
+          title={t.dashboard.todaysAppointments}
           value={dailyStats?.totals?.totalAppointments || 0}
-          subtitle={`${dailyStats?.totals?.completed || 0} completed`}
+          subtitle={`${dailyStats?.totals?.completed || 0} ${t.dashboard.completed}`}
           color="blue"
         />
 
         <StatCard
-          title="Active Employees"
+          title={t.dashboard.activeEmployees}
           value={dailyStats?.employees?.activeEmployees || 0}
-          subtitle={`Avg: ${dailyStats?.employees?.avgAppointmentsPerEmployee || 0}/per barber`}
+          subtitle={`Avg: ${dailyStats?.employees?.avgAppointmentsPerEmployee || 0} ${t.dashboard.avgPerBarber}`}
           color="green"
           onClick={() => navigate('/employees')}
         />
 
         <StatCard
-          title="Daily Revenue"
+          title={t.dashboard.dailyRevenue}
           value={`${getCurrencySymbol()}${dailyStats?.revenue?.revenueGenerated || 0}`}
-          subtitle="Completed sales today"
+          subtitle={t.dashboard.completedSalesToday}
           color="purple"
         />
 
         <StatCard
-          title="New Customers"
+          title={t.dashboard.newCustomers}
           value={dailyStats?.newClients || 0}
-          subtitle="Joined today"
+          subtitle={t.dashboard.joinedToday}
           color="orange"
         />
       </div>
 
       {/* Weekly */}
       <div className="card-surface">
-        <h2 className="section-title">Weekly Performance</h2>
+        <h2 className="section-title">{t.dashboard.weeklyPerformance}</h2>
         <div className="text-sm text-gray-500 mb-3">
-          Revenue in {barbershopCurrency} ({getCurrencySymbol()})
+          {t.dashboard.revenueIn} {barbershopCurrency} ({getCurrencySymbol()})
         </div>
 
         <div className="weekly-stats">
-          <p><strong>Total Revenue:</strong> {getCurrencySymbol()}{weeklyStats?.totalRevenueGenerated || 0}</p>
-          <p><strong>Average Per Day:</strong> {getCurrencySymbol()}{weeklyStats?.averageRevenuePerDay || 0}</p>
+          <p><strong>{t.dashboard.totalRevenue}:</strong> {getCurrencySymbol()}{weeklyStats?.totalRevenueGenerated || 0}</p>
+          <p><strong>{t.dashboard.averagePerDay}:</strong> {getCurrencySymbol()}{weeklyStats?.averageRevenuePerDay || 0}</p>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="card-surface">
-        <h2 className="section-title">Quick Actions</h2>
+        <h2 className="section-title">{t.dashboard.quickActions}</h2>
         <div className="qa-grid">
           <QuickAction
-            title="Manage Employees"
-            description="Add and manage your team"
+            title={t.dashboard.manageEmployees}
+            description={t.dashboard.manageEmployeesDesc}
             onClick={() => navigate('/employees')}
             color="blue"
           />
           <QuickAction
-            title="My Barbershop"
-            description="Edit shop information"
+            title={t.dashboard.myBarbershop}
+            description={t.dashboard.myBarbershopDesc}
             onClick={() => navigate(`/barbershop/edit/${user.barbershopId}`)}
             color="green"
           />
           <QuickAction
-            title="View Schedule"
-            description="Check appointments"
+            title={t.dashboard.viewSchedule}
+            description={t.dashboard.viewScheduleDesc}
             onClick={() => navigate('/agenda')}
             color="purple"
           />
           <QuickAction
-            title="Time Off Requests"
-            description="Manage employee availability"
+            title={t.dashboard.timeOffRequests}
+            description={t.dashboard.timeOffRequestsDesc}
             onClick={() => navigate('/timeoff')}
             color="orange"
           />
           <QuickAction
-            title="Manage Services"
-            description="Set up services and pricing"
+            title={t.dashboard.manageServices}
+            description={t.dashboard.manageServicesDesc}
             onClick={() => navigate('/services')}
             color="blue"
           />
           <QuickAction
-            title="Test Booking Flow"
-            description="Simulate booking"
+            title={t.dashboard.testBookingFlow}
+            description={t.dashboard.testBookingFlowDesc}
             onClick={() => navigate('/book-now')}
             color="blue"
           />
           <QuickAction
-            title="View Appointments"
-            description="Check and manage bookings"
+            title={t.dashboard.viewAppointments}
+            description={t.dashboard.viewAppointmentsDesc}
             onClick={() => navigate('/appointments')}
             color="green"
           />

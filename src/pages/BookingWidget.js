@@ -5,6 +5,7 @@ import TimeSlotSelection from './TimeSlotSelection';
 import ClientForm from './ClientForm';
 import Confirmation from './Confirmation';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BookingWidget = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -16,6 +17,7 @@ const BookingWidget = () => {
   });
   const [createdAppointment, setCreatedAppointment] = useState(null);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const handleServiceSelect = (service) => {
     setAppointmentData(prev => ({ ...prev, service }));
@@ -25,7 +27,6 @@ const BookingWidget = () => {
     setAppointmentData(prev => ({ ...prev, barber }));
   };
 
-  // UPDATED: accept both slot and date (date is shop-local YYYY-MM-DD)
   const handleTimeSelect = (slot, date) => {
     setAppointmentData(prev => ({ ...prev, slot, date }));
   };
@@ -37,6 +38,14 @@ const BookingWidget = () => {
 
   const nextStep = () => setCurrentStep(prev => prev + 1);
   const prevStep = () => setCurrentStep(prev => prev - 1);
+
+  const stepLabels = [
+    t.booking.stepService,
+    t.booking.stepBarber,
+    t.booking.stepTime,
+    t.booking.stepDetails,
+    t.booking.stepConfirm,
+  ];
 
   const steps = [
     {
@@ -65,7 +74,7 @@ const BookingWidget = () => {
           barbershopId={user.barbershopId}
           selectedService={appointmentData.service}
           selectedBarber={appointmentData.barber}
-          onTimeSelect={handleTimeSelect} // now receives (slot, date)
+          onTimeSelect={handleTimeSelect}
           onNext={nextStep}
           onBack={prevStep}
         />
@@ -94,12 +103,12 @@ const BookingWidget = () => {
   return (
     <div className="booking-widget">
       <div className="widget-header">
-        <h2 className="widget-title">Book Appointment</h2>
+        <h2 className="widget-title">{t.booking.title}</h2>
       </div>
 
       {/* Progress Steps */}
       <div className="progress-steps">
-        {['Service', 'Barber', 'Time', 'Details', 'Confirm'].map((step, index) => (
+        {stepLabels.map((step, index) => (
           <div key={step} className="progress-step">
             <div className={`step-indicator ${currentStep > index + 1 ? 'completed' : ''} ${currentStep === index + 1 ? 'active' : ''}`}>
               {currentStep > index + 1 ? '✓' : index + 1}

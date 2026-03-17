@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authAPI } from '../apis/authApi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const Barbershops = () => {
@@ -12,7 +13,8 @@ const Barbershops = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
-const { loginAs } = useAuth(); // useAuth hook
+  const { loginAs } = useAuth();
+  const { t } = useLanguage();
 
 
   const [formData, setFormData] = useState({
@@ -68,19 +70,10 @@ const { loginAs } = useAuth(); // useAuth hook
       const data = await authAPI.listBarbershops();
       setBarbershops(data);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to load barbershops');
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     } finally {
       setLoading(false);
     }
-  };
-
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   const compressImage = (file, maxDimension = 800, quality = 0.7) => {
@@ -165,7 +158,7 @@ const { loginAs } = useAuth(); // useAuth hook
       });
       await loadBarbershops();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to create barbershop');
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     }
   };
 
@@ -183,11 +176,9 @@ const { loginAs } = useAuth(); // useAuth hook
     setPresetForm((prev) => {
       const categories = [...prev.categories];
       const updatedCategory = { ...categories[idx], [field]: value };
-      // If name changed and we're creating (not editing), generate/update the key
       if (field === 'name' && !editingPresetKey) {
         updatedCategory.key = slugify(value);
       }
-      // If name changed and no key exists (shouldn't happen when editing, but just in case)
       if (field === 'name' && !updatedCategory.key) {
         updatedCategory.key = slugify(value);
       }
@@ -222,7 +213,6 @@ const { loginAs } = useAuth(); // useAuth hook
     setPresetForm((prev) => ({
       ...prev,
       categories: prev.categories.filter((_, i) => i !== idx),
-      // also clean services referencing removed category
       services: prev.services.map((svc) =>
         svc.categoryKey === prev.categories[idx]?.name ? { ...svc, categoryKey: '' } : svc
       ),
@@ -241,7 +231,6 @@ const { loginAs } = useAuth(); // useAuth hook
       setError('');
       const preset = await authAPI.getBarbershopPreset(key);
       
-      // Convert preset data to form format
       setPresetForm({
         name: preset.name || '',
         description: preset.description || '',
@@ -262,7 +251,7 @@ const { loginAs } = useAuth(); // useAuth hook
       setEditingPresetKey(key);
       setShowPresetForm(true);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to load preset');
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     }
   };
 
@@ -299,23 +288,21 @@ const { loginAs } = useAuth(); // useAuth hook
         }));
 
       if (editingPresetKey) {
-        // Update existing preset
         await authAPI.updateBarbershopPreset(editingPresetKey, {
           name: presetForm.name,
           description: presetForm.description,
           categories,
           services,
         });
-        setSuccess('Preset updated successfully.');
+        setSuccess(t.barbershops.presetUpdated);
       } else {
-        // Create new preset
         await authAPI.createBarbershopPreset({
           name: presetForm.name,
           description: presetForm.description,
           categories,
           services,
         });
-        setSuccess('Preset created. You can select it when creating a barbershop.');
+        setSuccess(t.barbershops.presetCreated);
       }
 
       setPresetForm({
@@ -328,17 +315,17 @@ const { loginAs } = useAuth(); // useAuth hook
       setShowPresetForm(false);
       await loadPresets();
     } catch (err) {
-      setError(err?.response?.data?.message || `Failed to ${editingPresetKey ? 'update' : 'create'} preset`);
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     }
   };
 
   const handleDeleteBarbershop = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this barbershop?')) return;
+    if (!window.confirm(t.barbershops.deleteConfirm)) return;
     try {
       await authAPI.deleteBarbershop(id);
       await loadBarbershops();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to delete barbershop');
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     }
   };
 
@@ -347,25 +334,21 @@ const { loginAs } = useAuth(); // useAuth hook
       await authAPI.restoreBarbershop(id);
       await loadBarbershops();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to restore barbershop');
+      setError(err?.response?.data?.message || t.barbershops.noBarbershopsDesc);
     }
   };
 
- const handleLoginAsBarbershop = async (barbershopId) => {
-  try {
-    const response = await authAPI.loginAsBarbershop(barbershopId);
-    const { accessToken, user: barbershopUser } = response;
-
-    // Use context method to set user and token
-    loginAs(barbershopUser, accessToken);
-
-    // Navigate to dashboard (context now has barbershop user)
-    navigate('/dashboard');
-  } catch (err) {
-    console.error('Failed to login as barbershop:', err);
-    alert(err?.response?.data?.message || 'Failed to login as barbershop');
-  }
-};
+  const handleLoginAsBarbershop = async (barbershopId) => {
+    try {
+      const response = await authAPI.loginAsBarbershop(barbershopId);
+      const { accessToken, user: barbershopUser } = response;
+      loginAs(barbershopUser, accessToken);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Failed to login as barbershop:', err);
+      alert(err?.response?.data?.message || t.barbershops.loginAs);
+    }
+  };
 
 
   const filteredBarbershops = barbershops.filter((shop) => {
@@ -384,7 +367,7 @@ const { loginAs } = useAuth(); // useAuth hook
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner mx-auto mb-4" />
-          <p style={{ color: '#4b5563', fontSize: 14 }}>Loading barbershops...</p>
+          <p style={{ color: '#4b5563', fontSize: 14 }}>{t.common.loading}</p>
         </div>
       </div>
     );
@@ -395,15 +378,15 @@ const { loginAs } = useAuth(); // useAuth hook
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Barbershops</h1>
-          <p className="dash-welcome">Manage all barbershops in your system</p>
+          <h1 className="dash-title">{t.barbershops.title}</h1>
+          <p className="dash-welcome">{t.barbershops.subtitle}</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
           className="btn-primary"
           style={{ maxWidth: '200px' }}
         >
-          New Barbershop
+          {t.barbershops.newBarbershop}
         </button>
       </div>
 
@@ -445,8 +428,8 @@ const { loginAs } = useAuth(); // useAuth hook
       <div className="preset-card" style={{ marginBottom: 16 }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="section-title">Presets</h3>
-            <p className="text-sm text-gray-500">Create reusable categories + services</p>
+            <h3 className="section-title">{t.barbershops.presets}</h3>
+            <p className="text-sm text-gray-500">{t.barbershops.presetsSubtitle}</p>
           </div>
           <button
             className="btn-secondary"
@@ -459,7 +442,7 @@ const { loginAs } = useAuth(); // useAuth hook
               }
             }}
           >
-            {showPresetForm ? 'Close' : 'New Preset'}
+            {showPresetForm ? t.common.close : t.barbershops.newPreset}
           </button>
         </div>
 
@@ -479,14 +462,14 @@ const { loginAs } = useAuth(); // useAuth hook
                 </div>
                 <div className="preset-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="preset-chip">
-                    <span className="dot" /> Ready to apply
+                    <span className="dot" /> {t.barbershops.readyToApply}
                   </span>
                   <button
                     onClick={() => handleLoadPresetForEdit(p.key)}
                     className="btn-secondary"
                     style={{ padding: '6px 12px', fontSize: '0.85rem' }}
                   >
-                    Edit
+                    {t.common.edit}
                   </button>
                 </div>
               </div>
@@ -498,16 +481,16 @@ const { loginAs } = useAuth(); // useAuth hook
           <form onSubmit={handleCreatePreset} className="space-y-4">
             <div style={{ marginBottom: '16px' }}>
               <h4 className="form-section-title">
-                {editingPresetKey ? 'Edit Preset' : 'Create New Preset'}
+                {editingPresetKey ? t.barbershops.editPreset : t.barbershops.createNewPreset}
               </h4>
             </div>
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Preset Name *</label>
+                <label className="form-label">{t.barbershops.presetName} *</label>
                 <input
                   type="text"
                   className="input"
-                  placeholder="e.g., Classic Barbershop, Modern Salon"
+                  placeholder={t.barbershops.presetNamePlaceholder}
                   value={presetForm.name}
                   onChange={(e) => setPresetForm((p) => ({ ...p, name: e.target.value }))}
                   required
@@ -517,11 +500,11 @@ const { loginAs } = useAuth(); // useAuth hook
                 </p>
               </div>
               <div className="form-group">
-                <label className="form-label">Description</label>
+                <label className="form-label">{t.barbershops.presetDescription}</label>
                 <input
                   type="text"
                   className="input"
-                  placeholder="Brief description of what this preset includes"
+                  placeholder={t.barbershops.presetDescPlaceholder}
                   value={presetForm.description}
                   onChange={(e) => setPresetForm((p) => ({ ...p, description: e.target.value }))}
                 />
@@ -532,15 +515,15 @@ const { loginAs } = useAuth(); // useAuth hook
             </div>
 
             <div className="form-section">
-              <h4 className="form-section-title">Categories</h4>
+              <h4 className="form-section-title">{t.barbershops.categories}</h4>
               <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '16px' }}>
-                Define service categories (e.g., Haircuts, Beard Services, Styling)
+                {t.barbershops.categoriesSubtitle}
               </p>
               <div className="space-y-3">
                 {presetForm.categories.map((cat, idx) => (
                   <div key={idx} className="space-y-2" style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
                     <div className="form-group">
-                      <label className="form-label">Category Name *</label>
+                      <label className="form-label">{t.barbershops.categoryName} *</label>
                       <input
                         type="text"
                         className="input"
@@ -551,7 +534,7 @@ const { loginAs } = useAuth(); // useAuth hook
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Category Description</label>
+                      <label className="form-label">{t.barbershops.categoryDescription}</label>
                       <input
                         type="text"
                         className="input"
@@ -567,27 +550,27 @@ const { loginAs } = useAuth(); // useAuth hook
                         onClick={() => removePresetCategory(idx)}
                         style={{ marginTop: '8px' }}
                       >
-                        Remove Category
+                        {t.barbershops.removeCategory}
                       </button>
                     )}
                   </div>
                 ))}
                 <button type="button" className="btn-secondary" onClick={addPresetCategory}>
-                  + Add Category
+                  {t.barbershops.addCategory}
                 </button>
               </div>
             </div>
 
             <div className="form-section">
-              <h4 className="form-section-title">Services</h4>
+              <h4 className="form-section-title">{t.barbershops.services}</h4>
               <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '16px' }}>
-                Add services that belong to the categories above (e.g., Classic Cut, Beard Trim, Hair Wash)
+                {t.barbershops.servicesSubtitle}
               </p>
               <div className="space-y-3">
                 {presetForm.services.map((svc, idx) => (
                   <div key={idx} className="space-y-2" style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
                     <div className="form-group">
-                      <label className="form-label">Service Name *</label>
+                      <label className="form-label">{t.barbershops.serviceName} *</label>
                       <input
                         type="text"
                         className="input"
@@ -598,7 +581,7 @@ const { loginAs } = useAuth(); // useAuth hook
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Service Description</label>
+                      <label className="form-label">{t.barbershops.serviceDescription}</label>
                       <input
                         type="text"
                         className="input"
@@ -609,7 +592,7 @@ const { loginAs } = useAuth(); // useAuth hook
                     </div>
                     <div className="grid md:grid-cols-2 gap-3">
                       <div className="form-group">
-                        <label className="form-label">Price *</label>
+                        <label className="form-label">{t.barbershops.servicePrice} *</label>
                         <input
                           type="text"
                           className="input"
@@ -617,7 +600,6 @@ const { loginAs } = useAuth(); // useAuth hook
                           value={svc.price}
                           onChange={(e) => {
                             const value = e.target.value;
-                            // Allow empty or numeric values
                             if (value === '' || !isNaN(value) || !isNaN(value.replace(/[^0-9.]/g, ''))) {
                               handlePresetServiceChange(idx, 'price', value);
                             }
@@ -629,7 +611,7 @@ const { loginAs } = useAuth(); // useAuth hook
                         </p>
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Duration (minutes) *</label>
+                        <label className="form-label">{t.barbershops.serviceDuration} *</label>
                         <input
                           type="text"
                           className="input"
@@ -637,7 +619,6 @@ const { loginAs } = useAuth(); // useAuth hook
                           value={svc.duration}
                           onChange={(e) => {
                             const value = e.target.value;
-                            // Allow empty or numeric values
                             if (value === '' || !isNaN(value) || !isNaN(value.replace(/[^0-9]/g, ''))) {
                               handlePresetServiceChange(idx, 'duration', value);
                             }
@@ -650,14 +631,14 @@ const { loginAs } = useAuth(); // useAuth hook
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Category *</label>
+                      <label className="form-label">{t.barbershops.serviceCategory} *</label>
                       <select
                         className="input"
                         value={svc.categoryKey}
                         onChange={(e) => handlePresetServiceChange(idx, 'categoryKey', e.target.value)}
                         required
                       >
-                        <option value="">Select a category</option>
+                        <option value="">{t.barbershops.selectCategory}</option>
                         {presetForm.categories
                           .filter((c) => c.name.trim())
                           .map((cat, catIdx) => {
@@ -680,20 +661,20 @@ const { loginAs } = useAuth(); // useAuth hook
                         onClick={() => removePresetService(idx)}
                         style={{ marginTop: '8px' }}
                       >
-                        Remove Service
+                        {t.barbershops.removeService}
                       </button>
                     )}
                   </div>
                 ))}
                 <button type="button" className="btn-secondary" onClick={addPresetService}>
-                  + Add Service
+                  {t.barbershops.addService}
                 </button>
               </div>
             </div>
 
             <div className="flex gap-3">
               <button type="submit" className="btn-primary" style={{ maxWidth: '200px' }}>
-                {editingPresetKey ? 'Update Preset' : 'Create Preset'}
+                {editingPresetKey ? t.barbershops.updatePreset : t.barbershops.createPreset}
               </button>
               {editingPresetKey && (
                 <button
@@ -701,10 +682,9 @@ const { loginAs } = useAuth(); // useAuth hook
                   onClick={handleCancelEdit}
                   className="btn-secondary"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
               )}
-              
             </div>
           </form>
         )}
@@ -715,7 +695,7 @@ const { loginAs } = useAuth(); // useAuth hook
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search barbershops..."
+            placeholder={t.barbershops.searchBarbershops}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input"
@@ -747,13 +727,13 @@ const { loginAs } = useAuth(); // useAuth hook
       {showCreateForm && (
         <div className="card-surface fade-in" style={{ marginBottom: 20 }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">Create New Barbershop</h3>
+            <h3 className="section-title">{t.barbershops.createBarbershop}</h3>
             <button
               onClick={() => setShowCreateForm(false)}
               className="btn-secondary"
               type="button"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
 
@@ -761,7 +741,7 @@ const { loginAs } = useAuth(); // useAuth hook
             <div className="form-grid">
               {/* NAME */}
               <div className="form-group">
-                <label className="form-label">Barbershop Name *</label>
+                <label className="form-label">{t.barbershops.barbershopName} *</label>
                 <input
                   type="text"
                   name="name"
@@ -775,7 +755,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* ADDRESS */}
               <div className="form-group">
-                <label className="form-label">Address</label>
+                <label className="form-label">{t.barbershops.address}</label>
                 <input
                   type="text"
                   name="address"
@@ -788,7 +768,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* CITY */}
               <div className="form-group">
-                <label className="form-label">City</label>
+                <label className="form-label">{t.barbershops.city}</label>
                 <input
                   type="text"
                   name="city"
@@ -801,7 +781,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* POSTAL CODE */}
               <div className="form-group">
-                <label className="form-label">Postal Code</label>
+                <label className="form-label">{t.barbershops.postalCode}</label>
                 <input
                   type="text"
                   name="postalCode"
@@ -814,7 +794,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* PHONE */}
               <div className="form-group">
-                <label className="form-label">Phone</label>
+                <label className="form-label">{t.common.phone}</label>
                 <input
                   type="text"
                   name="phone"
@@ -827,7 +807,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* EMAIL */}
               <div className="form-group">
-                <label className="form-label">Barbershop Email</label>
+                <label className="form-label">{t.barbershops.barbershopEmail}</label>
                 <input
                   type="email"
                   name="email"
@@ -840,7 +820,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* LOGO */}
               <div className="form-group">
-                <label className="form-label">Logo</label>
+                <label className="form-label">{t.barbershops.logo}</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -869,7 +849,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* OWNER EMAIL */}
               <div className="form-group">
-                <label className="form-label">Owner Email *</label>
+                <label className="form-label">{t.barbershops.ownerEmail} *</label>
                 <input
                   type="email"
                   name="ownerEmail"
@@ -883,7 +863,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* OWNER PASSWORD */}
               <div className="form-group">
-                <label className="form-label">Owner Password *</label>
+                <label className="form-label">{t.barbershops.ownerPassword} *</label>
                 <input
                   type="password"
                   name="ownerPassword"
@@ -897,7 +877,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* CURRENCY */}
               <div className="form-group">
-                <label className="form-label">Currency</label>
+                <label className="form-label">{t.common.currency}</label>
                 <select
                   name="currency"
                   value={formData.currency}
@@ -912,14 +892,14 @@ const { loginAs } = useAuth(); // useAuth hook
 
               {/* PRESET */}
               <div className="form-group">
-                <label className="form-label">Starter Preset</label>
+                <label className="form-label">{t.barbershops.starterPreset}</label>
                 <select
                   name="presetKey"
                   value={formData.presetKey}
                   onChange={handleInputChange}
                   className="input"
                 >
-                  <option value="none">No preset (empty categories/services)</option>
+                  <option value="none">{t.barbershops.noPreset}</option>
                   {presets.map((preset) => (
                     <option key={preset.key} value={preset.key}>
                       {preset.name} • {preset.categories} categories / {preset.services} services
@@ -934,20 +914,20 @@ const { loginAs } = useAuth(); // useAuth hook
 
             {/* Opening Hours Section */}
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>Opening Hours</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>{t.barbershops.openingHours}</h3>
               <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
-                Set opening and closing times for each day (leave blank for closed days)
+                {t.barbershops.openingHoursSubtitle}
               </p>
               <div className="form-grid">
                 {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => {
                   const dayNames = {
-                    mon: 'Monday',
-                    tue: 'Tuesday',
-                    wed: 'Wednesday',
-                    thu: 'Thursday',
-                    fri: 'Friday',
-                    sat: 'Saturday',
-                    sun: 'Sunday'
+                    mon: t.timeOff.monday,
+                    tue: t.timeOff.tuesday,
+                    wed: t.timeOff.wednesday,
+                    thu: t.timeOff.thursday,
+                    fri: t.timeOff.friday,
+                    sat: t.timeOff.saturday,
+                    sun: t.timeOff.sunday
                   };
                   return (
                     <div key={day} className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -979,14 +959,14 @@ const { loginAs } = useAuth(); // useAuth hook
 
             <div className="flex space-x-3 pt-4">
               <button type="submit" className="btn-primary" style={{ maxWidth: '200px' }}>
-                Create Barbershop
+                {t.barbershops.createBarbershop}
               </button>
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
                 className="btn-secondary"
               >
-                Cancel
+                {t.common.cancel}
               </button>
             </div>
           </form>
@@ -1011,7 +991,7 @@ const { loginAs } = useAuth(); // useAuth hook
                   )}
                 </div>
                 <span className="barbershop-status">
-                  {shop.deleted ? 'Deleted' : 'Active'}
+                  {shop.deleted ? t.barbershops.deleted : t.barbershops.active}
                 </span>
               </div>
 
@@ -1021,7 +1001,7 @@ const { loginAs } = useAuth(); // useAuth hook
 
               <div className="info-item" style={{ marginBottom: 6 }}>
                 <span className="info-dot" />
-                Currency: <strong>{shop.currency}</strong>
+                {t.barbershops.currency}: <strong>{shop.currency}</strong>
               </div>
 
               <div className="barbershop-info">
@@ -1036,18 +1016,18 @@ const { loginAs } = useAuth(); // useAuth hook
                 {!shop.deleted ? (
                   <>
                     <button onClick={() => navigate(`/barbershop/edit/${shop._id}`)} className="action-btn action-primary">
-                      Edit
+                      {t.common.edit}
                     </button>
                     <button onClick={() => handleDeleteBarbershop(shop._id)} className="action-btn action-secondary">
-                      Delete
+                      {t.common.delete}
                     </button>
                     <button onClick={() => handleLoginAsBarbershop(shop._id)} className="action-btn action-success">
-                      Login as
+                      {t.barbershops.loginAs}
                     </button>
                   </>
                 ) : (
                   <button onClick={() => handleRestoreBarbershop(shop._id)} className="action-btn action-primary">
-                    Restore
+                    {t.barbershops.restore}
                   </button>
                 )}
               </div>
@@ -1061,13 +1041,13 @@ const { loginAs } = useAuth(); // useAuth hook
           <div className="empty-icon">
             <div style={{ width: 28, height: 28, borderRadius: 8, background: '#9ca3af' }} />
           </div>
-          <h3 className="empty-title">No barbershops found</h3>
+          <h3 className="empty-title">{t.barbershops.noBarbershopsFound}</h3>
           <p className="empty-description">
-            {searchTerm ? 'Try adjusting your search terms' : 'Get started by creating your first barbershop'}
+            {searchTerm ? t.barbershops.adjustSearch : t.barbershops.noBarbershopsDesc}
           </p>
           {!searchTerm && (
             <button onClick={() => setShowCreateForm(true)} className="btn-primary" style={{ maxWidth: '200px', margin: '0 auto' }}>
-              Create Barbershop
+              {t.barbershops.createBarbershop}
             </button>
           )}
         </div>

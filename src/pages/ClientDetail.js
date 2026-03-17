@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { clientAPI } from '../apis/clientAPI';
 import { appointmentAPI } from '../apis/appointmentAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [client, setClient] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,14 +26,9 @@ const ClientDetail = () => {
       setLoading(true);
       setError('');
 
-      // Load client
-      console.log(id)
-
       const clientData = await clientAPI.getClient(id);
-      console.log(clientData)
       setClient(clientData);
 
-      // Load appointments for this client
       const appointmentsData = await appointmentAPI.getAppointments(
         user.barbershopId,
         null,
@@ -39,7 +36,6 @@ const ClientDetail = () => {
         id
       );
 
-      // Sort by date (newest first)
       const sorted = (appointmentsData || []).sort((a, b) => {
         const dateA = new Date(a.startTime || a.startLocal || 0);
         const dateB = new Date(b.startTime || b.startLocal || 0);
@@ -60,7 +56,7 @@ const ClientDetail = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleDateString('en-US', {
+      return date.toLocaleDateString(undefined, {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -76,7 +72,7 @@ const ClientDetail = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleTimeString('en-US', {
+      return date.toLocaleTimeString(undefined, {
         hour: '2-digit',
         minute: '2-digit'
       });
@@ -85,12 +81,22 @@ const ClientDetail = () => {
     }
   };
 
+  const getStatusLabel = (status) => {
+    const map = {
+      scheduled: t.appointments.scheduled,
+      completed: t.appointments.completed,
+      cancelled: t.appointments.cancelled,
+      'no-show': t.appointments.noShow,
+    };
+    return map[status] || status;
+  };
+
   if (loading) {
     return (
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner"></div>
-          <p className="text-gray-600">Loading client information...</p>
+          <p className="text-gray-600">{t.clientDetail.loadingClient}</p>
         </div>
       </div>
     );
@@ -101,7 +107,7 @@ const ClientDetail = () => {
       <div className="dashboard-container">
         <div className="error-message">{error}</div>
         <button onClick={() => navigate('/clients')} className="btn-secondary">
-          Back to Clients
+          {t.clientDetail.backToClientsBtn}
         </button>
       </div>
     );
@@ -112,10 +118,10 @@ const ClientDetail = () => {
       <div className="dashboard-header">
         <div>
           <button onClick={() => navigate('/clients')} className="btn-secondary client-back-btn">
-            ← Back to Clients
+            {t.clientDetail.backToClients}
           </button>
-          <h1 className="dash-title">{client?.name || 'Client Details'}</h1>
-          <p className="dash-welcome">View client information and appointment history</p>
+          <h1 className="dash-title">{client?.name || t.clients.clientDetails}</h1>
+          <p className="dash-welcome">{t.clientDetail.clientInformation}</p>
         </div>
       </div>
 
@@ -123,23 +129,23 @@ const ClientDetail = () => {
 
       {client && (
         <div className="card-surface client-detail-card">
-          <h2 className="form-section-title">Client Information</h2>
+          <h2 className="form-section-title">{t.clientDetail.clientInformation}</h2>
           <div className="client-detail-grid">
             <div className="client-detail-item">
-              <span className="client-detail-label">Name</span>
+              <span className="client-detail-label">{t.common.name}</span>
               <span className="client-detail-value">{client.name || 'N/A'}</span>
             </div>
             <div className="client-detail-item">
-              <span className="client-detail-label">Email</span>
+              <span className="client-detail-label">{t.common.email}</span>
               <span className="client-detail-value">{client.email || '—'}</span>
             </div>
             <div className="client-detail-item">
-              <span className="client-detail-label">Phone</span>
+              <span className="client-detail-label">{t.common.phone}</span>
               <span className="client-detail-value">{client.phone || '—'}</span>
             </div>
             {client.notes && (
               <div className="client-detail-item client-detail-item-full">
-                <span className="client-detail-label">Notes</span>
+                <span className="client-detail-label">{t.common.notes}</span>
                 <span className="client-detail-value">{client.notes}</span>
               </div>
             )}
@@ -149,16 +155,16 @@ const ClientDetail = () => {
 
       <div className="card-surface client-appointments-card">
         <h2 className="form-section-title">
-          Appointment History
+          {t.clientDetail.appointmentHistory}
           {appointments.length > 0 && <span className="appointment-count">({appointments.length})</span>}
         </h2>
 
         {appointments.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📅</div>
-            <h3 className="empty-title">No Appointments</h3>
+            <h3 className="empty-title">{t.clients.noAppointments}</h3>
             <p className="empty-description">
-              This client hasn't booked any appointments yet.
+              {t.clientDetail.noAppointments}
             </p>
           </div>
         ) : (
@@ -175,28 +181,25 @@ const ClientDetail = () => {
                     </span>
                   </div>
                   <span className={`appointment-status appointment-status-${appointment.status}`}>
-                    {appointment.status === 'scheduled' ? 'Scheduled' :
-                     appointment.status === 'completed' ? 'Completed' :
-                     appointment.status === 'cancelled' ? 'Cancelled' :
-                     appointment.status === 'no-show' ? 'No Show' : appointment.status}
+                    {getStatusLabel(appointment.status)}
                   </span>
                 </div>
                 <div className="appointment-details">
                   <div className="appointment-detail-row">
-                    <span className="appointment-detail-label">Barber:</span>
+                    <span className="appointment-detail-label">{t.clientDetail.barber}:</span>
                     <span className="appointment-detail-value">{appointment.employee?.name || 'N/A'}</span>
                   </div>
                   <div className="appointment-detail-row">
-                    <span className="appointment-detail-label">Service:</span>
+                    <span className="appointment-detail-label">{t.clientDetail.service}:</span>
                     <span className="appointment-detail-value">{appointment.service?.name || 'N/A'}</span>
                   </div>
                   <div className="appointment-detail-row">
-                    <span className="appointment-detail-label">Duration:</span>
-                    <span className="appointment-detail-value">{appointment.service?.duration || 'N/A'} minutes</span>
+                    <span className="appointment-detail-label">{t.clientDetail.duration}:</span>
+                    <span className="appointment-detail-value">{appointment.service?.duration || 'N/A'} {t.clientDetail.minutes}</span>
                   </div>
                   {appointment.service?.price && (
                     <div className="appointment-detail-row">
-                      <span className="appointment-detail-label">Price:</span>
+                      <span className="appointment-detail-label">{t.clientDetail.price}:</span>
                       <span className="appointment-detail-value">€{appointment.service.price}</span>
                     </div>
                   )}
@@ -206,7 +209,7 @@ const ClientDetail = () => {
                     onClick={() => navigate(`/appointments/edit/${appointment._id}`)}
                     className="btn-secondary btn-view-appointment"
                   >
-                    View Details
+                    {t.clientDetail.viewDetails}
                   </button>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { appointmentAPI } from '../apis/appointmentAPI';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
@@ -8,8 +9,8 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
   const [error, setError] = useState('');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
-  // Helper function to extract time from ISO string (same as Agenda.js)
   const extractTime = (isoString) => {
     if (!isoString) return '';
     const timePart = isoString.split('T')[1] || '';
@@ -21,7 +22,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
   const formatDateTime = (isoString) => {
     if (!isoString) return '';
     const date = new Date(isoString);
-    const dateStr = date.toLocaleDateString('en-US', {
+    const dateStr = date.toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -36,7 +37,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
   };
 
   const handleMarkNoShow = async () => {
-    if (!window.confirm('Mark this appointment as "No Show"?')) return;
+    if (!window.confirm(t.appointmentDetail.markNoShowConfirm)) return;
     
     try {
       setLoading(true);
@@ -52,7 +53,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete this appointment?`)) return;
+    if (!window.confirm(t.appointmentDetail.deleteConfirm)) return;
     
     try {
       setLoading(true);
@@ -73,10 +74,9 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
   };
 
   const handleCopy = () => {
-    // Copy appointment details to clipboard or create duplicate
     const details = `Client: ${appointment.client?.name}\nService: ${appointment.service?.name}\nEmployee: ${appointment.employee?.name}\nTime: ${formatDateTime(appointment.startLocal)}`;
     navigator.clipboard.writeText(details);
-    alert('Appointment details copied to clipboard');
+    alert(t.appointmentDetail.copiedToClipboard);
   };
 
   const isNewCustomer = appointment.client && !appointment.client.phone && !appointment.client.email;
@@ -86,7 +86,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
       <div className="appointment-detail-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="appointment-detail-header">
-          <h2 className="appointment-detail-title">Appointment</h2>
+          <h2 className="appointment-detail-title">{t.appointmentDetail.title}</h2>
           <button onClick={onClose} className="appointment-detail-close">×</button>
         </div>
 
@@ -107,16 +107,16 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
               <div className="barbershop-info">
                 <div className="info-item">
                   <span className="info-dot" />
-                  <span>{appointment.client?.phone || 'No phone number'}</span>
+                  <span>{appointment.client?.phone || t.appointmentDetail.noPhone}</span>
                 </div>
                 <div className="info-item">
                   <span className="info-dot" />
-                  <span>{appointment.client?.email || 'No email'}</span>
+                  <span>{appointment.client?.email || t.appointmentDetail.noEmail}</span>
                 </div>
               </div>
               {isNewCustomer && (
                 <span className="preset-badge" style={{ background: '#fef3c7', color: '#92400e', marginTop: '8px', display: 'inline-block' }}>
-                  🎉 New customer!
+                  {t.appointmentDetail.newCustomer}
                 </span>
               )}
             </div>
@@ -141,7 +141,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
             <div className="appointment-detail-info-item">
               <div className="info-item">
                 <span className="info-dot" />
-                <span>✂️ {appointment.service?.name || 'Service'}</span>
+                <span>✂️ {appointment.service?.name || t.appointments.service}</span>
               </div>
             </div>
             <div className="appointment-detail-info-item">
@@ -165,14 +165,14 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
                       {appointment.employee?.name?.charAt(0).toUpperCase() || 'E'}
                     </div>
                   )}
-                  <span>{appointment.employee?.name || 'Employee'}</span>
+                  <span>{appointment.employee?.name || t.appointments.employee}</span>
                 </div>
               </div>
             </div>
             <div className="appointment-detail-info-item">
               <div className="info-item">
                 <span className="info-dot" />
-                <span>🕐 {appointment.service?.duration || 30} min</span>
+                <span>🕐 {appointment.service?.duration || 30} {t.common.minutes}</span>
               </div>
             </div>
           </div>
@@ -189,7 +189,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
               <svg className="appointment-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Mark as no show
+              {t.appointmentDetail.markNoShow}
             </button>
             <button 
               className="appointment-detail-action-item"
@@ -198,7 +198,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
               <svg className="appointment-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
-              More
+              {t.appointmentDetail.more}
             </button>
           </div>
 
@@ -211,7 +211,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
                 <svg className="appointment-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit
+                {t.appointmentDetail.edit}
               </button>
               <button 
                 className="appointment-detail-action-item"
@@ -220,7 +220,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
                 <svg className="appointment-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Copy
+                {t.appointmentDetail.copy}
               </button>
               <button 
                 className="appointment-detail-action-item"
@@ -230,7 +230,7 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
                 <svg className="appointment-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete
+                {t.appointmentDetail.delete}
               </button>
             </div>
           )}
@@ -241,4 +241,3 @@ const AppointmentDetail = ({ appointment, onClose, onUpdate, onDelete }) => {
 };
 
 export default AppointmentDetail;
-

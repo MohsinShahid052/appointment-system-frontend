@@ -4,12 +4,14 @@ import { appointmentAPI } from '../apis/appointmentAPI';
 import { employeeAPI } from '../apis/employeeAPI';
 import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const EditAppointmentNew = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [loadingServices, setLoadingServices] = useState(true);
   const [error, setError] = useState('');
@@ -104,9 +106,6 @@ const EditAppointmentNew = () => {
         return eId === dId;
       }) || data.employee;
       
-      // Extract employee services from the loaded employee data
-      // This will be handled by the useEffect that watches formData.employee
-      
       const service = allServices.find(s => {
         const sId = s._id?.toString();
         const dId = serviceId?.toString();
@@ -121,7 +120,7 @@ const EditAppointmentNew = () => {
         notes: data.notes || ''
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load appointment');
+      setError(err.response?.data?.message || t.editAppointment.loadingAppointment);
     } finally {
       setLoading(false);
     }
@@ -142,7 +141,7 @@ const EditAppointmentNew = () => {
       console.log('Loaded categories:', categoriesData.length);
     } catch (err) {
       console.error('Error loading services:', err);
-      setError('Failed to load services');
+      setError(t.editAppointment.loadingServices);
     } finally {
       setLoadingServices(false);
     }
@@ -164,7 +163,6 @@ const EditAppointmentNew = () => {
       }
       
       // Extract service IDs from employee's services array
-      // The services are already populated from the backend
       const employeeServices = employee.services || [];
       const serviceIds = employeeServices.map(s => {
         if (typeof s === 'string') return s;
@@ -176,7 +174,6 @@ const EditAppointmentNew = () => {
       console.log('Employee service IDs extracted:', serviceIds.length);
     } catch (err) {
       console.error('Error extracting employee services:', err);
-      // If error, clear employee service IDs so all services show
       setEmployeeServiceIds([]);
     }
   };
@@ -256,7 +253,7 @@ const EditAppointmentNew = () => {
       setSuccess('');
       
       if (!formData.service || !formData.employee || !formData.date || !formData.time) {
-        setError('Please fill in all required fields');
+        setError(t.editAppointment.allRequired);
         return;
       }
 
@@ -278,12 +275,12 @@ const EditAppointmentNew = () => {
         notes: formData.notes
       });
       
-      setSuccess('Appointment updated successfully!');
+      setSuccess(t.editAppointment.updatedSuccess);
       setTimeout(() => {
         navigate('/appointments');
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update appointment');
+      setError(err.response?.data?.message || t.editAppointment.loadingAppointment);
     }
   };
 
@@ -300,7 +297,6 @@ const EditAppointmentNew = () => {
 
   const getServicesByCategory = (categoryId) => {
     if (!categoryId) return [];
-    // Use filteredServices if employee is selected, otherwise use allServices
     const servicesToUse = formData.employee ? filteredServices : allServices;
     return servicesToUse.filter(s => {
       const sCatId = s.categoryId?.toString();
@@ -318,7 +314,7 @@ const EditAppointmentNew = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading appointment...</p>
+          <p className="text-gray-600">{t.editAppointment.loadingAppointment}</p>
         </div>
       </div>
     );
@@ -329,9 +325,9 @@ const EditAppointmentNew = () => {
       <div className="dashboard-container">
         <div className="card-surface">
           <div className="text-center py-8">
-            <p className="text-red-600">Appointment not found</p>
+            <p className="text-red-600">{t.editAppointment.appointmentNotFound}</p>
             <button onClick={() => navigate('/appointments')} className="btn-secondary mt-4">
-              Back to Appointments
+              {t.editAppointment.backToAppointments}
             </button>
           </div>
         </div>
@@ -343,7 +339,7 @@ const EditAppointmentNew = () => {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Edit appointment</h1>
+          <h1 className="dash-title">{t.editAppointment.title}</h1>
         </div>
         <div className="flex gap-2">
           <button onClick={() => navigate('/appointments')} className="btn-secondary">
@@ -371,11 +367,11 @@ const EditAppointmentNew = () => {
         <div className="edit-appointment-left">
           {/* Services Section */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Services</h3>
+            <h3 className="edit-section-title">{t.editAppointment.services}</h3>
             
             {/* Employee Selection First */}
             <div className="form-group">
-              <label className="form-label">EMPLOYEE *</label>
+              <label className="form-label">{t.editAppointment.employee} *</label>
               <div className="employee-select-wrapper">
                 <select
                   name="employee"
@@ -384,7 +380,7 @@ const EditAppointmentNew = () => {
                   className="input"
                   required
                 >
-                  <option value="">Select an employee</option>
+                  <option value="">{t.editAppointment.selectEmployee}</option>
                   {employees.map(employee => (
                     <option key={employee._id} value={employee._id}>
                       {employee.name}
@@ -405,18 +401,18 @@ const EditAppointmentNew = () => {
 
             {/* Service Selection - Only shows services for selected employee */}
             <div className="form-group">
-              <label className="form-label">SERVICE *</label>
+              <label className="form-label">{t.editAppointment.service} *</label>
               {loadingServices ? (
                 <div className="no-services-message">
-                  <p className="text-gray-600">Loading services...</p>
+                  <p className="text-gray-600">{t.editAppointment.loadingServices}</p>
                 </div>
               ) : !formData.employee ? (
                 <div className="no-services-message">
-                  <p className="text-gray-600">Please select an employee first</p>
+                  <p className="text-gray-600">{t.editAppointment.selectEmployeeFirst}</p>
                 </div>
               ) : filteredServices.length === 0 ? (
                 <div className="no-services-message">
-                  <p className="text-gray-600">This employee doesn't offer any services yet.</p>
+                  <p className="text-gray-600">{t.editAppointment.noServices}</p>
                 </div>
               ) : (
                 <select
@@ -427,7 +423,7 @@ const EditAppointmentNew = () => {
                   required
                   disabled={!formData.employee}
                 >
-                  <option value="">Select a service</option>
+                  <option value="">{t.editAppointment.selectService}</option>
                   {(() => {
                     console.log('Rendering services dropdown. Filtered services count:', filteredServices.length);
                     console.log('Categories count:', categories.length);
@@ -524,7 +520,7 @@ const EditAppointmentNew = () => {
 
             {formData.service && (
               <div className="form-group">
-                <label className="form-label">DURATION</label>
+                <label className="form-label">{t.editAppointment.duration}</label>
                 <input
                   type="text"
                   value={`${formData.service.duration} min`}
@@ -537,10 +533,10 @@ const EditAppointmentNew = () => {
 
           {/* Date and Time Section */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Date and time</h3>
+            <h3 className="edit-section-title">{t.editAppointment.dateAndTime}</h3>
             
             <div className="form-group">
-              <label className="form-label">DATE AND TIME</label>
+              <label className="form-label">{t.editAppointment.dateAndTimeLabel}</label>
               <div className="datetime-inputs">
                 <input
                   type="date"
@@ -564,12 +560,12 @@ const EditAppointmentNew = () => {
                   className="btn-secondary"
                   disabled={!formData.employee || !formData.service || !formData.date}
                 >
-                  Find availabilities
+                  {t.editAppointment.findAvailabilities}
                 </button>
               </div>
               {availableSlots.length > 0 && (
                 <div className="available-slots-container">
-                  <p className="text-sm text-gray-600 mb-2">Available slots:</p>
+                  <p className="text-sm text-gray-600 mb-2">{t.editAppointment.availableSlots}</p>
                   <div className="slots-grid">
                     {availableSlots.map((slot, index) => {
                       const timeStr = slot.startLocalISO ? slot.startLocalISO.split('T')[1]?.substring(0, 5) : '';
@@ -593,7 +589,7 @@ const EditAppointmentNew = () => {
           {/* Note Section */}
           <div className="edit-section">
             <div className="note-header">
-              <h3 className="edit-section-title">Note</h3>
+              <h3 className="edit-section-title">{t.editAppointment.note}</h3>
               <svg className="note-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -604,7 +600,7 @@ const EditAppointmentNew = () => {
               onChange={handleInputChange}
               className="input"
               rows="4"
-              placeholder="Write your note here"
+              placeholder={t.editAppointment.notePlaceholder}
             />
           </div>
         </div>
@@ -613,7 +609,7 @@ const EditAppointmentNew = () => {
         <div className="edit-appointment-right">
           {/* Customer Section */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Customer</h3>
+            <h3 className="edit-section-title">{t.editAppointment.customer}</h3>
             <div className="customer-info">
               <div className="customer-avatar">
                 {appointment.client?.name?.charAt(0).toUpperCase() || 'C'}
@@ -622,15 +618,15 @@ const EditAppointmentNew = () => {
                 <h4 className="customer-name">{appointment.client?.name || 'Unknown'}</h4>
                 <div className="customer-contact">
                   <p className="text-orange-600">
-                    {appointment.client?.phone || 'No phone number'}
+                    {appointment.client?.phone || t.editAppointment.noPhone}
                   </p>
                   <p className="text-orange-600">
-                    {appointment.client?.email || 'No email'}
+                    {appointment.client?.email || t.editAppointment.noEmail}
                   </p>
                 </div>
                 {!appointment.client?.phone && !appointment.client?.email && (
                   <span className="customer-badge">
-                    It is {appointment.client?.name?.split(' ')[0] || 'customer'}'s first appointment
+                    It is {appointment.client?.name?.split(' ')[0] || 'customer'}'s {t.editAppointment.firstAppointment}
                   </span>
                 )}
               </div>
@@ -640,13 +636,13 @@ const EditAppointmentNew = () => {
           {/* Summary Section */}
           <div className="edit-section">
             <div className="summary-item">
-              <span className="summary-label">DATE AND TIME</span>
+              <span className="summary-label">{t.editAppointment.dateAndTimeLabel}</span>
               <span className="summary-value">
-                {formData.date ? formatDate(formData.date) : 'Not set'} - {formData.time || 'Not set'}
+                {formData.date ? formatDate(formData.date) : t.editAppointment.notSet} - {formData.time || t.editAppointment.notSet}
               </span>
             </div>
             <div className="summary-item">
-              <span className="summary-label">PRICE</span>
+              <span className="summary-label">{t.editAppointment.price}</span>
               <span className="summary-value">
                 {getCurrencySymbol()}{getTotalPrice().toFixed(2)}
               </span>
@@ -659,7 +655,7 @@ const EditAppointmentNew = () => {
             className="btn-primary w-full"
             disabled={!formData.service || !formData.employee || !formData.date || !formData.time}
           >
-            Save
+            {t.editAppointment.save}
           </button>
         </div>
       </div>
@@ -668,4 +664,3 @@ const EditAppointmentNew = () => {
 };
 
 export default EditAppointmentNew;
-

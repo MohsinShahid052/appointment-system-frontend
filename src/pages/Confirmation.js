@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Confirmation = ({ appointment, onClose }) => {
   const [barbershopCurrency, setBarbershopCurrency] = useState('EUR');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Currency helper function
   const getCurrencySymbol = () => {
@@ -59,7 +61,7 @@ const Confirmation = ({ appointment, onClose }) => {
     return (
       <div className="widget-step">
         <div className="loading-spinner mx-auto mb-4"></div>
-        <p className="text-center text-gray-600">Loading confirmation...</p>
+        <p className="text-center text-gray-600">{t.booking.loadingConfirmation}</p>
       </div>
     );
   }
@@ -73,12 +75,12 @@ const Confirmation = ({ appointment, onClose }) => {
       {/* Header */}
       <div className="confirmation-header">
         <div className="confirmation-icon">✓</div>
-        <h2 className="step-title">Booking Confirmed!</h2>
+        <h2 className="step-title">{t.booking.bookingConfirmed}</h2>
         <p className="step-description">
-          Your appointment has been successfully scheduled
+          {t.booking.bookingConfirmedDesc}
         </p>
         <p className="text-sm text-gray-500 mt-1">
-          All prices in {barbershopCurrency} ({getCurrencySymbol()})
+          {t.booking.allPricesIn} {barbershopCurrency} ({getCurrencySymbol()})
         </p>
       </div>
 
@@ -87,43 +89,43 @@ const Confirmation = ({ appointment, onClose }) => {
     
 
         <div className="confirmation-item">
-          <strong>Service:</strong> {service.name || '—'}
+          <strong>{t.booking.service}:</strong> {service.name || '—'}
         </div>
 
         <div className="confirmation-item">
-          <strong>Barber:</strong> {employee.name || '—'}
+          <strong>{t.booking.barber}:</strong> {employee.name || '—'}
         </div>
 
         <div className="confirmation-item">
-          <strong>Date & Time:</strong> {appointment.startLocal}
+          <strong>{t.booking.dateTime}:</strong> {appointment.startLocal}
         </div>
 
         <div className="confirmation-item">
-          <strong>Duration:</strong> {service.duration ? `${service.duration} minutes` : '—'}
+          <strong>{t.booking.duration}:</strong> {service.duration ? `${service.duration} ${t.booking.minutes}` : '—'}
         </div>
 
         <div className="confirmation-item">
-          <strong>Total:</strong> {service.price ? `${getCurrencySymbol()}${service.price}` : '—'}
+          <strong>{t.booking.total}:</strong> {service.price ? `${getCurrencySymbol()}${service.price}` : '—'}
         </div>
       </div>
 
       {/* Notes */}
       <div className="confirmation-notes">
         <p>
-          ✅ A confirmation email has been sent with your appointment details.
+          {t.booking.confirmationEmail}
         </p>
         <p>
-          ⏰ A reminder will be sent 24 hours before your appointment.
+          {t.booking.reminderEmail}
         </p>
         <p>
-          📧 Check your spam folder if you don't see the email soon.
+          {t.booking.checkSpam}
         </p>
       </div>
 
       {/* Actions */}
       <div className="step-actions">
         <button onClick={onClose} className="btn-primary">
-          View All Appointments
+          {t.booking.viewAllAppointments}
         </button>
       </div>
     </div>

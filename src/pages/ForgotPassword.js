@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../apis/authApi';
 import { useToast } from '../components/Toast';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const ForgotPassword = () => {
   const toast = useToast();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,7 +49,7 @@ const ForgotPassword = () => {
             letterSpacing: '-0.03em'
           }}
         >
-          Forgot Password
+          {t.auth.forgotPasswordTitle}
         </h2>
 
         <p
@@ -58,7 +60,7 @@ const ForgotPassword = () => {
             marginBottom: 16
           }}
         >
-          Enter your email address and we'll send you a link to reset your password
+          {t.auth.forgotPasswordSubtitle}
         </p>
 
         {error && (
@@ -96,7 +98,7 @@ const ForgotPassword = () => {
             <input
               type="email"
               className="input"
-              placeholder="Email address"
+              placeholder={t.auth.emailAddress}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -105,7 +107,7 @@ const ForgotPassword = () => {
             />
 
             <button className="btn-primary" disabled={loading}>
-              {loading ? 'Sending...' : 'Send Reset Link'}
+              {loading ? t.auth.sending : t.auth.sendResetLink}
             </button>
           </form>
         ) : (
@@ -121,7 +123,7 @@ const ForgotPassword = () => {
                 fontSize: '14px'
               }}
             >
-              Back to Login
+              {t.auth.backToLogin}
             </Link>
           </div>
         )}
@@ -135,7 +137,7 @@ const ForgotPassword = () => {
               fontSize: '13px'
             }}
           >
-            ← Back to Login
+            ← {t.auth.backToLogin}
           </Link>
         </div>
       </div>

@@ -6,9 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import AppointmentDetail from '../components/AppointmentDetail';
 import BookingWidget from './BookingWidget';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AppointmentsList = () => {
   const toast = useToast();
+  const { t } = useLanguage();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -35,7 +37,7 @@ const AppointmentsList = () => {
   };
 
   const handleCancelAppointment = async (appointmentId, clientName) => {
-    if (!window.confirm(`Are you sure you want to cancel ${clientName}'s appointment?`)) return;
+    if (!window.confirm(`${t.appointments.cancelAppointment}: ${clientName}?`)) return;
 
     try {
       await appointmentAPI.cancelAppointment(appointmentId);
@@ -44,15 +46,15 @@ const AppointmentsList = () => {
           apt._id === appointmentId ? { ...apt, status: 'cancelled' } : apt
         )
       );
-      toast.success(`Appointment for ${clientName} has been cancelled`);
+      toast.success(t.appointments.appointmentCancelled);
     } catch (err) {
-      const errorMessage = err.userMessage || 'Failed to cancel appointment';
+      const errorMessage = err.userMessage || t.common.error;
       toast.error(errorMessage);
     }
   };
 
   const handleCompleteAppointment = async (appointmentId) => {
-    if (!window.confirm(`Mark this appointment as completed?`)) return;
+    if (!window.confirm(t.appointments.markCompleted + '?')) return;
 
     try {
       await appointmentAPI.markAppointmentCompleted(appointmentId);
@@ -64,16 +66,16 @@ const AppointmentsList = () => {
         )
       );
     } catch {
-      alert('Failed to complete appointment.');
+      alert(t.common.error);
     }
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      scheduled: { class: 'status-active', text: 'Scheduled' },
-      completed: { class: 'status-completed', text: 'Completed' },
-      cancelled: { class: 'status-inactive', text: 'Cancelled' },
-      'no-show': { class: 'status-warning', text: 'No Show' }
+      scheduled: { class: 'status-active', text: t.appointments.scheduled },
+      completed: { class: 'status-completed', text: t.appointments.completed },
+      cancelled: { class: 'status-inactive', text: t.appointments.cancelled },
+      'no-show': { class: 'status-warning', text: t.appointments.noShow }
     };
     const config = statusConfig[status] || statusConfig.scheduled;
     return <span className={`status-badge ${config.class}`}>{config.text}</span>;
@@ -95,7 +97,7 @@ const AppointmentsList = () => {
     return (
       <div className="center-screen">
         <div className="loading-spinner mx-auto mb-4"></div>
-        <p>Loading appointments...</p>
+        <p>{t.common.loading}</p>
       </div>
     );
   }
@@ -104,8 +106,8 @@ const AppointmentsList = () => {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">Appointments</h1>
-          <p className="dash-welcome">Manage today's schedule</p>
+          <h1 className="dash-title">{t.appointments.title}</h1>
+          <p className="dash-welcome">{t.appointments.subtitle}</p>
         </div>
 
         <div className="flex gap-3">
@@ -121,7 +123,7 @@ const AppointmentsList = () => {
             className="btn-primary"
             style={{ maxWidth: '200px' }}
           >
-            New Appointment
+            {t.appointments.addAppointment}
           </button>
         </div>
       </div>
@@ -132,14 +134,14 @@ const AppointmentsList = () => {
           className={`btn ${activeTab === 'active' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('active')}
         >
-          Active Appointments
+          {t.common.active} {t.appointments.title}
         </button>
 
         <button
           className={`btn ${activeTab === 'cancelled' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('cancelled')}
         >
-          Cancelled Appointments
+          {t.appointments.cancelled} {t.appointments.title}
         </button>
       </div>
 
@@ -147,7 +149,7 @@ const AppointmentsList = () => {
       {showBookingWidget && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">New Appointment</h3>
+            <h3 className="section-title">{t.appointments.addAppointment}</h3>
             <button
               onClick={() => {
                 setShowBookingWidget(false);
@@ -155,7 +157,7 @@ const AppointmentsList = () => {
               }}
               className="text-gray-400 hover:text-gray-600"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
           <BookingWidget />
@@ -166,7 +168,7 @@ const AppointmentsList = () => {
       <div className="appointments-list">
         {displayedAppointments.length === 0 ? (
           <div className="empty-state">
-            <h3 className="empty-title">No appointments</h3>
+            <h3 className="empty-title">{t.appointments.noAppointments}</h3>
             <p className="empty-description">
               No {activeTab} appointments for this date.
             </p>
@@ -192,11 +194,11 @@ const AppointmentsList = () => {
               </div>
 
               <div className="appointment-details">
-                <div><strong>Service:</strong> {appointment.service?.name}</div>
-                <div><strong>Barber:</strong> {appointment.employee?.name}</div>
-                <div><strong>Time:</strong> {appointment.startLocal}</div>
+                <div><strong>{t.appointments.service}:</strong> {appointment.service?.name}</div>
+                <div><strong>{t.appointments.employee}:</strong> {appointment.employee?.name}</div>
+                <div><strong>{t.common.time}:</strong> {appointment.startLocal}</div>
                 {appointment.notes && (
-                  <div><strong>Notes:</strong> {appointment.notes}</div>
+                  <div><strong>{t.common.notes}:</strong> {appointment.notes}</div>
                 )}
               </div>
 
@@ -212,14 +214,14 @@ const AppointmentsList = () => {
                       }
                       className="action-btn action-secondary"
                     >
-                      Cancel
+                      {t.appointments.cancelAppointment}
                     </button>
 
                     <button
                       onClick={() => handleCompleteAppointment(appointment._id)}
                       className="action-btn action-success"
                     >
-                      Mark Completed
+                      {t.appointments.markCompleted}
                     </button>
                   </>
                 )}
@@ -228,7 +230,7 @@ const AppointmentsList = () => {
                   className="action-btn action-primary"
                   onClick={() => setSelectedAppointment(appointment)}
                 >
-                  View Details
+                  {t.common.edit}
                 </button>
               </div>
             </div>

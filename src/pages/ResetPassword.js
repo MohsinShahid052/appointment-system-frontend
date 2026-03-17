@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../apis/authApi';
 import { useToast } from '../components/Toast';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const toast = useToast();
+  const { t } = useLanguage();
   const token = searchParams.get('token');
   
   const [formData, setFormData] = useState({
@@ -20,7 +22,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid reset token. Please request a new password reset.');
+      setError(t.auth.invalidResetToken || 'Invalid reset token. Please request a new password reset.');
     }
   }, [token]);
 
@@ -37,23 +39,22 @@ const ResetPassword = () => {
     setError('');
 
     if (!token) {
-      setError('Invalid reset token');
+      setError(t.auth.invalidResetToken || 'Invalid reset token');
       return;
     }
 
-    // Validation
     if (!formData.newPassword || !formData.confirmPassword) {
-      setError('All fields are required');
+      setError(t.common.required || 'All fields are required');
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t.auth.passwordTooShort || 'Password must be at least 6 characters long');
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t.auth.passwordMismatch);
       return;
     }
 
@@ -62,15 +63,15 @@ const ResetPassword = () => {
     try {
       await authAPI.resetPassword(token, formData.newPassword);
       setSuccess(true);
-      toast.success('Password reset successfully');
+      toast.success(t.auth.passwordUpdated);
       
-      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.userMessage || err.message || 'Failed to reset password');
-      toast.error(err.userMessage || err.message || 'Failed to reset password');
+      const msg = err.userMessage || err.message || 'Failed to reset password';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,7 @@ const ResetPassword = () => {
               letterSpacing: '-0.03em'
             }}
           >
-            Password Reset Successful
+            {t.auth.resetPasswordTitle}
           </h2>
 
           <p
@@ -100,7 +101,7 @@ const ResetPassword = () => {
               marginBottom: 16
             }}
           >
-            Your password has been reset successfully. Redirecting to login...
+            {t.auth.passwordUpdated}. {t.auth.redirectingToLogin || 'Redirecting to login...'}
           </p>
 
           <div style={{ textAlign: 'center' }}>
@@ -109,7 +110,7 @@ const ResetPassword = () => {
               className="btn-primary"
               style={{ display: 'inline-block', textDecoration: 'none' }}
             >
-              Go to Login
+              {t.auth.backToLogin}
             </Link>
           </div>
         </div>
@@ -129,7 +130,7 @@ const ResetPassword = () => {
             letterSpacing: '-0.03em'
           }}
         >
-          Reset Password
+          {t.auth.resetPasswordTitle}
         </h2>
 
         <p
@@ -140,7 +141,7 @@ const ResetPassword = () => {
             marginBottom: 16
           }}
         >
-          Enter your new password
+          {t.auth.resetPasswordSubtitle}
         </p>
 
         {error && (
@@ -163,7 +164,7 @@ const ResetPassword = () => {
             type="password"
             name="newPassword"
             className="input"
-            placeholder="New Password"
+            placeholder={t.auth.newPassword}
             value={formData.newPassword}
             onChange={handleChange}
             required
@@ -176,7 +177,7 @@ const ResetPassword = () => {
             type="password"
             name="confirmPassword"
             className="input"
-            placeholder="Confirm New Password"
+            placeholder={t.auth.confirmPassword}
             value={formData.confirmPassword}
             onChange={handleChange}
             required
@@ -185,7 +186,7 @@ const ResetPassword = () => {
           />
 
           <button className="btn-primary" disabled={loading || !token}>
-            {loading ? 'Resetting...' : 'Reset Password'}
+            {loading ? t.auth.resetting : t.auth.resetPasswordBtn}
           </button>
         </form>
 
@@ -198,7 +199,7 @@ const ResetPassword = () => {
               fontSize: '13px'
             }}
           >
-            ← Back to Login
+            ← {t.auth.backToLogin}
           </Link>
         </div>
       </div>
