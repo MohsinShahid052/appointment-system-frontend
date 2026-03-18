@@ -7,6 +7,7 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const roleLabel = t.common[user?.role] || user?.role;
 
   const QuickAction = ({ title, description, onClick, color }) => (
     <div className="quick-action" onClick={onClick}>
@@ -32,7 +33,7 @@ const AdminDashboard = () => {
 
         <div className="role-badge">
           <div className="role-label">{t.common.currentRole}</div>
-          <div className="role-value">{user?.role}</div>
+          <div className="role-value">{roleLabel}</div>
         </div>
       </div>
 

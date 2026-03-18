@@ -346,6 +346,7 @@ const en = {
     adjustSearch: 'Try adjusting your search terms',
     currency: 'Currency',
     searchBarbershops: 'Search barbershops...',
+    resultsSummary: '{shown} of {total} barbershops',
     deleteConfirm: 'Are you sure you want to delete this barbershop?',
     // BarbershopEdit
     phoneNumber: 'Phone Number',
@@ -527,6 +528,7 @@ const en = {
   // ── Booking Widget ────────────────────────────────────────────────────────
   booking: {
     title: 'Book Appointment',
+    testFlowSubtitle: 'Test the booking flow',
     stepService: 'Service',
     stepBarber: 'Barber',
     stepTime: 'Time',

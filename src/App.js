@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -54,6 +54,20 @@ const DashboardSelector = () => {
   } else {
     return <BarbershopDashboard />;
   }
+};
+
+const InternalBookingPage = () => {
+  const { t } = useLanguage();
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dash-title">{t.booking.title}</h1>
+        <p className="dash-welcome">{t.booking.testFlowSubtitle}</p>
+      </div>
+      <BookingWidget />
+    </div>
+  );
 };
 
 function App() {
@@ -166,13 +180,7 @@ function App() {
             <Route path="/book-now" element={
               <BarbershopRoute>
                 <Layout>
-                  <div className="dashboard-container">
-                    <div className="dashboard-header">
-                      <h1 className="dash-title">Book an Appointment</h1>
-                      <p className="dash-welcome">Test the booking flow</p>
-                    </div>
-                    <BookingWidget />
-                  </div>
+                  <InternalBookingPage />
                 </Layout>
               </BarbershopRoute>
             } />

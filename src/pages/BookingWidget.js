@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ServiceSelection from './ServiceSelection';
 import BarberSelection from './BarberSelection';
 import TimeSlotSelection from './TimeSlotSelection';
 import ClientForm from './ClientForm';
 import Confirmation from './Confirmation';
+import FloatingWhatsApp from '../components/FloatingWhatsApp';
+import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -16,8 +18,25 @@ const BookingWidget = () => {
     date: null
   });
   const [createdAppointment, setCreatedAppointment] = useState(null);
+  const [shopPhone, setShopPhone] = useState(null);
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    const fetchShopDetails = async () => {
+      if (user?.barbershopId) {
+        try {
+          const res = await serviceAPI.getBarbershop(user.barbershopId);
+          if (res.data?.phone) {
+            setShopPhone(res.data.phone);
+          }
+        } catch (err) {
+          console.error("Failed to fetch barbershop for phone number", err);
+        }
+      }
+    };
+    fetchShopDetails();
+  }, [user]);
 
   const handleServiceSelect = (service) => {
     setAppointmentData(prev => ({ ...prev, service }));
@@ -122,6 +141,9 @@ const BookingWidget = () => {
       <div className="widget-content">
         {steps[currentStep - 1].component}
       </div>
+
+      {/* Floating WhatsApp Button */}
+      <FloatingWhatsApp phoneNumber={shopPhone} />
     </div>
   );
 };

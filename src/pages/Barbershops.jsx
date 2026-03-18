@@ -702,7 +702,9 @@ const Barbershops = () => {
           />
         </div>
         <div style={{ fontSize: 13, color: '#6b7280' }}>
-          {filteredBarbershops.length} of {barbershops.length} barbershops
+          {t.barbershops.resultsSummary
+            .replace('{shown}', filteredBarbershops.length)
+            .replace('{total}', barbershops.length)}
         </div>
       </div>
 

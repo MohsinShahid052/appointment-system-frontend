@@ -8,6 +8,7 @@ const BarbershopDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const roleLabel = t.common[user?.role] || user?.role;
 
   const [dailyStats, setDailyStats] = useState(null);
   const [weeklyStats, setWeeklyStats] = useState(null);
@@ -106,12 +107,12 @@ const BarbershopDashboard = () => {
             {t.dashboard.welcomeBack}{user?.email ? `, ${user.email}` : ''}
           </p>
           <p className="text-sm text-gray-600 mt-1">
-            Currency: {barbershopCurrency} ({getCurrencySymbol()})
+            {t.common.currency}: {barbershopCurrency} ({getCurrencySymbol()})
           </p>
         </div>
         <div className="role-badge">
           <div className="role-label">{t.common.currentRole}</div>
-          <div className="role-value">{user?.role}</div>
+          <div className="role-value">{roleLabel}</div>
         </div>
       </div>
 
