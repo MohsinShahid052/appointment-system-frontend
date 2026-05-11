@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import '../styles/global.css';
 
 const Login = () => {
@@ -12,7 +11,6 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +41,7 @@ const Login = () => {
             letterSpacing: '-0.03em'
           }}
         >
-          {t.auth.welcomeBack}
+          Welcome Back
         </h2>
 
         <p
@@ -54,7 +52,7 @@ const Login = () => {
             marginBottom: 16
           }}
         >
-          {t.auth.signInSubtitle}
+          Sign in to access your barbershop dashboard
         </p>
 
         {error && (
@@ -76,7 +74,7 @@ const Login = () => {
           <input
             type="email"
             className="input"
-            placeholder={t.auth.emailAddress}
+            placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
@@ -86,7 +84,7 @@ const Login = () => {
           <input
             type="password"
             className="input"
-            placeholder={t.auth.password}
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
@@ -94,7 +92,7 @@ const Login = () => {
           />
 
           <button className="btn-primary" disabled={loading}>
-            {loading ? t.auth.signingIn : t.auth.signIn}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

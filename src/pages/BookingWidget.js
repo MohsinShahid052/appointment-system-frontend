@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ServiceSelection from './ServiceSelection';
 import BarberSelection from './BarberSelection';
 import TimeSlotSelection from './TimeSlotSelection';
 import ClientForm from './ClientForm';
 import Confirmation from './Confirmation';
-import FloatingWhatsApp from '../components/FloatingWhatsApp';
-import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const BookingWidget = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,25 +15,7 @@ const BookingWidget = () => {
     date: null
   });
   const [createdAppointment, setCreatedAppointment] = useState(null);
-  const [shopPhone, setShopPhone] = useState(null);
   const { user } = useAuth();
-  const { t } = useLanguage();
-
-  useEffect(() => {
-    const fetchShopDetails = async () => {
-      if (user?.barbershopId) {
-        try {
-          const res = await serviceAPI.getBarbershop(user.barbershopId);
-          if (res.data?.phone) {
-            setShopPhone(res.data.phone);
-          }
-        } catch (err) {
-          console.error("Failed to fetch barbershop for phone number", err);
-        }
-      }
-    };
-    fetchShopDetails();
-  }, [user]);
 
   const handleServiceSelect = (service) => {
     setAppointmentData(prev => ({ ...prev, service }));
@@ -46,6 +25,7 @@ const BookingWidget = () => {
     setAppointmentData(prev => ({ ...prev, barber }));
   };
 
+  // UPDATED: accept both slot and date (date is shop-local YYYY-MM-DD)
   const handleTimeSelect = (slot, date) => {
     setAppointmentData(prev => ({ ...prev, slot, date }));
   };
@@ -57,14 +37,6 @@ const BookingWidget = () => {
 
   const nextStep = () => setCurrentStep(prev => prev + 1);
   const prevStep = () => setCurrentStep(prev => prev - 1);
-
-  const stepLabels = [
-    t.booking.stepService,
-    t.booking.stepBarber,
-    t.booking.stepTime,
-    t.booking.stepDetails,
-    t.booking.stepConfirm,
-  ];
 
   const steps = [
     {
@@ -93,7 +65,7 @@ const BookingWidget = () => {
           barbershopId={user.barbershopId}
           selectedService={appointmentData.service}
           selectedBarber={appointmentData.barber}
-          onTimeSelect={handleTimeSelect}
+          onTimeSelect={handleTimeSelect} // now receives (slot, date)
           onNext={nextStep}
           onBack={prevStep}
         />
@@ -122,12 +94,12 @@ const BookingWidget = () => {
   return (
     <div className="booking-widget">
       <div className="widget-header">
-        <h2 className="widget-title">{t.booking.title}</h2>
+        <h2 className="widget-title">Book Appointment</h2>
       </div>
 
       {/* Progress Steps */}
       <div className="progress-steps">
-        {stepLabels.map((step, index) => (
+        {['Service', 'Barber', 'Time', 'Details', 'Confirm'].map((step, index) => (
           <div key={step} className="progress-step">
             <div className={`step-indicator ${currentStep > index + 1 ? 'completed' : ''} ${currentStep === index + 1 ? 'active' : ''}`}>
               {currentStep > index + 1 ? '✓' : index + 1}
@@ -141,9 +113,6 @@ const BookingWidget = () => {
       <div className="widget-content">
         {steps[currentStep - 1].component}
       </div>
-
-      {/* Floating WhatsApp Button */}
-      <FloatingWhatsApp phoneNumber={shopPhone} />
     </div>
   );
 };

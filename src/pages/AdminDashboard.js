@@ -1,13 +1,10 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const roleLabel = t.common[user?.role] || user?.role;
 
   const QuickAction = ({ title, description, onClick, color }) => (
     <div className="quick-action" onClick={onClick}>
@@ -22,35 +19,31 @@ const AdminDashboard = () => {
   return (
     <div className="dashboard-container fade-in">
 
-      {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">{t.dashboard.adminTitle}</h1>
-          <p className="dash-welcome">
-            {t.dashboard.adminSubtitle}
-          </p>
+          <h1 className="dash-title">Admin Dashboard</h1>
+          <p className="dash-welcome">System overview and management</p>
         </div>
 
         <div className="role-badge">
-          <div className="role-label">{t.common.currentRole}</div>
-          <div className="role-value">{roleLabel}</div>
+          <div className="role-label">Current Role</div>
+          <div className="role-value">{user?.role}</div>
         </div>
       </div>
 
-      {/* Quick Actions Only */}
       <div className="card-surface">
-        <h2 className="section-title">{t.dashboard.managementActions}</h2>
+        <h2 className="section-title">Management Actions</h2>
 
         <div className="qa-grid">
           <QuickAction
-            title={t.dashboard.manageBarbershops}
-            description={t.dashboard.manageBarbershopsDesc}
+            title="Manage Barbershops"
+            description="View and manage all barbershops"
             onClick={() => navigate('/barbershops')}
             color="blue"
           />
           <QuickAction
-            title={t.dashboard.changePassword}
-            description={t.dashboard.changePasswordDesc}
+            title="Change Password"
+            description="Update your account password"
             onClick={() => navigate('/change-password')}
             color="purple"
           />

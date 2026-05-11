@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { appointmentAPI } from '../apis/appointmentAPI';
 import { useToast } from '../components/Toast';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const TimeSlotSelection = ({ 
   barbershopId, 
@@ -12,7 +11,6 @@ const TimeSlotSelection = ({
   onBack 
 }) => {
   const toast = useToast();
-  const { t } = useLanguage();
   const [slots, setSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -79,7 +77,7 @@ const TimeSlotSelection = ({
       );
       setSlots(availableSlots || []);
     } catch (err) {
-      const errorMessage = err.userMessage || t.booking.loadingTimes;
+      const errorMessage = err.userMessage || 'Failed to load available time slots';
       setError(errorMessage);
       toast.error(errorMessage);
       console.error(err);
@@ -134,13 +132,13 @@ const TimeSlotSelection = ({
   return (
     <div className="widget-step">
       <div className="step-header">
-        <h2 className="step-title">{t.booking.chooseTime}</h2>
-        <p className="step-description">{t.booking.chooseTimeDesc}</p>
+        <h2 className="step-title">Choose Time</h2>
+        <p className="step-description">Select your preferred date and time</p>
       </div>
 
       {/* Date Selection */}
       <div className="date-selection">
-        <h4 className="section-subtitle">{t.booking.selectDate}</h4>
+        <h4 className="section-subtitle">Select Date</h4>
         <div className="dates-grid">
           {getDateOptions().map(date => {
             const worksOnThisDay = employeeWorksOnDate(date);
@@ -151,7 +149,7 @@ const TimeSlotSelection = ({
                 className={`date-option ${selectedDate === date ? 'selected' : ''} ${!worksOnThisDay ? 'date-option-disabled' : ''}`}
                 type="button"
                 disabled={!worksOnThisDay}
-                title={!worksOnThisDay ? `${selectedBarber?.name || t.booking.chooseBarberGeneral} ${t.booking.doesNotWorkTitle}` : ''}
+                title={!worksOnThisDay ? `${selectedBarber?.name || 'This barber'} does not work on this day` : ''}
                 style={!worksOnThisDay ? { 
                   opacity: 0.5, 
                   cursor: 'not-allowed',
@@ -173,7 +171,7 @@ const TimeSlotSelection = ({
       {/* Time Slots */}
       <div className="time-selection">
         <h4 className="section-subtitle">
-          {t.booking.availableTimesFor} {formatDate(selectedDate)}
+          Available Times for {formatDate(selectedDate)}
         </h4>
 
         {error && <div className="error-message">{error}</div>}
@@ -181,15 +179,15 @@ const TimeSlotSelection = ({
         {loading ? (
           <div className="loading-state">
             <div className="loading-spinner" style={{ margin: '0 auto 8px' }}></div>
-            <p>{t.booking.loadingTimes}</p>
+            <p>Loading available times...</p>
           </div>
         ) : slots.length === 0 ? (
           <div className="empty-state">
-            <p>{t.booking.noSlots}</p>
+            <p>No available time slots for this date.</p>
             <p className="text-sm">
               {!employeeWorksOnDate(selectedDate) 
-                ? `${selectedBarber?.name || t.booking.chooseBarberGeneral} ${t.booking.doesNotWork} ${formatDate(selectedDate)}. ${t.booking.pleaseSelectDate}`
-                : t.booking.allBooked}
+                ? `${selectedBarber?.name || 'This barber'} does not work on ${formatDate(selectedDate)}. Please select a different date.`
+                : 'All time slots may be booked or the barber may have time off. Please try another date.'}
             </p>
           </div>
         ) : (
@@ -201,14 +199,14 @@ const TimeSlotSelection = ({
                 className={`slot-tab ${activeTab === '30min' ? 'active' : ''}`}
                 onClick={() => setActiveTab('30min')}
               >
-                {t.booking.slots30min}
+                30-Minute Slots
               </button>
               <button
                 type="button"
                 className={`slot-tab ${activeTab === '15min' ? 'active' : ''}`}
                 onClick={() => setActiveTab('15min')}
               >
-                {t.booking.slots15min}
+                15-Minute Slots
               </button>
             </div>
 
@@ -234,7 +232,7 @@ const TimeSlotSelection = ({
                   </div>
                 ) : (
                   <div className="empty-state">
-                    <p>{t.booking.no30min}</p>
+                    <p>No 30-minute slots available for this date.</p>
                   </div>
                 )}
               </div>
@@ -261,7 +259,7 @@ const TimeSlotSelection = ({
                   </div>
                 ) : (
                   <div className="empty-state">
-                    <p>{t.booking.no15min}</p>
+                    <p>No 15-minute slots available for this date.</p>
                   </div>
                 )}
               </div>
@@ -272,7 +270,7 @@ const TimeSlotSelection = ({
 
       <div className="step-actions">
         <button onClick={onBack} className="btn-secondary" type="button">
-          {t.booking.back}
+          Back
         </button>
         <button
           onClick={handleNext}
@@ -280,7 +278,7 @@ const TimeSlotSelection = ({
           className="btn-primary"
           type="button"
         >
-          {t.booking.nextYourDetails}
+          Next: Your Details
         </button>
       </div>
     </div>

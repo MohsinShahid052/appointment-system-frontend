@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../apis/authApi';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const BarbershopEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
 
   const barbershopId = id || user?.barbershopId;
 
@@ -18,6 +16,7 @@ const BarbershopEdit = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // PASSWORD STATES
   const [adminNewPassword, setAdminNewPassword] = useState('');
   const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
 
@@ -105,7 +104,7 @@ const BarbershopEdit = () => {
           setOriginalData(initialData);
         }
       } catch (err) {
-        setError(t.barbershops.failedUpdate);
+        setError('Failed to load barbershop details');
       } finally {
         setLoading(false);
       }
@@ -113,6 +112,16 @@ const BarbershopEdit = () => {
     fetchBarbershopData();
   }, [barbershopId, user]);
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+  };
+
+  // Compress to keep payloads small (prevents 413 from backend)
   const compressImage = (file, maxDimension = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -143,12 +152,15 @@ const BarbershopEdit = () => {
 
     if (name === 'logo' && files?.length > 0) {
       const file = files[0];
+
       if (!file.type.startsWith('image/')) {
         setError('Please upload a valid image file');
         return;
       }
+      // Allow larger raw files but compress before storing
       try {
         const compressed = await compressImage(file);
+        // Guardrail for extremely large images even after compression
         if (compressed.length > 2.5 * 1024 * 1024) {
           setError('Compressed image is still too large. Please choose a smaller image.');
           return;
@@ -159,6 +171,7 @@ const BarbershopEdit = () => {
         setError('Failed to process image. Please try another file.');
       }
     } else if (name.startsWith('openingHours.')) {
+      // Handle opening hours nested fields (e.g., "openingHours.mon.start")
       const parts = name.split('.');
       if (parts.length === 3) {
         const [_, day, timeType] = parts;
@@ -186,73 +199,66 @@ const BarbershopEdit = () => {
     e.preventDefault();
 
     if (!hasChanges) {
-      setError(t.barbershops.noChanges);
+      setError('No changes to save');
       return;
     }
 
     try {
       setSaving(true);
       await authAPI.updateBarbershop(barbershopId, formData);
-      setSuccess(t.barbershops.updatedSuccess);
+      setSuccess("Barbershop updated successfully!");
       setOriginalData(formData);
       setHasChanges(false);
     } catch (err) {
-      setError(t.barbershops.failedUpdate);
+      setError("Failed to update barbershop");
     } finally {
       setSaving(false);
     }
   };
 
+  // ADMIN CHANGE PASSWORD
   const handleAdminPasswordChange = async () => {
     if (adminNewPassword !== adminConfirmPassword) {
-      setError(t.barbershops.passwordMismatch);
+      setError("Passwords do not match");
       return;
     }
 
     try {
       setSaving(true);
       await authAPI.adminResetPassword(barbershopId, adminNewPassword);
-      setSuccess(t.barbershops.passwordUpdated);
+      setSuccess("Password updated successfully!");
       setAdminNewPassword('');
       setAdminConfirmPassword('');
     } catch (err) {
-      setError(t.barbershops.failedPassword);
+      setError("Failed to update password");
     } finally {
       setSaving(false);
     }
   };
 
+  // BARBERSHOP CHANGE ITS OWN PASSWORD
   const handleBarbershopPasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
-      setError(t.barbershops.passwordMismatch);
+      setError("New passwords do not match");
       return;
     }
 
     try {
       setSaving(true);
-      await authAPI.changeOwnPassword(oldPassword, newPassword);
-      setSuccess(t.barbershops.passwordChanged);
+    await authAPI.changeOwnPassword(oldPassword, newPassword);
+
+      setSuccess("Password changed successfully!");
       setOldPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (err) {
-      setError(t.barbershops.failedPassword);
+      setError("Failed to change password");
     } finally {
       setSaving(false);
     }
   };
 
-  const dayNames = {
-    mon: t.timeOff.monday,
-    tue: t.timeOff.tuesday,
-    wed: t.timeOff.wednesday,
-    thu: t.timeOff.thursday,
-    fri: t.timeOff.friday,
-    sat: t.timeOff.saturday,
-    sun: t.timeOff.sunday,
-  };
-
-  if (loading) return <p>{t.barbershops.loadingBarbershop}</p>;
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="dashboard-container">
@@ -262,32 +268,16 @@ const BarbershopEdit = () => {
         {/* HEADER */}
         <div className="px-6 py-4 border-b border-gray-200">
           <h1 className="dash-title">
-            {user.role === 'admin' ? t.barbershops.editBarbershop : t.barbershops.myBarbershop}
+            {user.role === 'admin' ? 'Edit Barbershop' : 'My Barbershop'}
           </h1>
         </div>
-
-        {/* Feedback */}
-        {error && (
-          <div className="px-6 pt-4">
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 10, color: '#b91c1c', fontSize: 14 }}>
-              {error}
-            </div>
-          </div>
-        )}
-        {success && (
-          <div className="px-6 pt-4">
-            <div style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 8, padding: 10, color: '#166534', fontSize: 14 }}>
-              {success}
-            </div>
-          </div>
-        )}
 
         {/* MAIN BARBERSHOP FORM */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
           <div className="form-grid">
             <div className="form-group">
-              <label>{t.barbershops.barbershopName} *</label>
+              <label>Barbershop Name *</label>
               <input
                 type="text"
                 name="name"
@@ -299,7 +289,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.phoneNumber}</label>
+              <label>Phone Number</label>
               <input
                 type="text"
                 name="phone"
@@ -310,7 +300,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.address}</label>
+              <label>Address</label>
               <input
                 type="text"
                 name="address"
@@ -321,7 +311,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.city}</label>
+              <label>City</label>
               <input
                 type="text"
                 name="city"
@@ -332,7 +322,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.postalCode}</label>
+              <label>Postal Code</label>
               <input
                 type="text"
                 name="postalCode"
@@ -343,7 +333,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.common.email}</label>
+              <label>Email</label>
               <input
                 type="email"
                 name="email"
@@ -354,7 +344,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.common.currency}</label>
+              <label>Currency</label>
               <select
                 name="currency"
                 value={formData.currency}
@@ -368,13 +358,13 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.logo}</label>
+              <label>Logo</label>
               <div className="image-upload">
                 <div className="image-preview">
                   {formData.logo ? (
                     <img src={formData.logo} alt="Logo preview" />
                   ) : (
-                    <span className="image-placeholder">{t.barbershops.noLogo}</span>
+                    <span className="image-placeholder">No logo</span>
                   )}
                 </div>
 
@@ -387,7 +377,7 @@ const BarbershopEdit = () => {
                       onChange={handleInputChange}
                       className="hidden"
                     />
-                    {t.barbershops.uploadLogo}
+                    Upload Logo
                   </label>
                   {formData.logo && (
                     <button
@@ -395,7 +385,7 @@ const BarbershopEdit = () => {
                       onClick={handleRemoveLogo}
                       className="btn-secondary"
                     >
-                      {t.common.remove}
+                      Remove
                     </button>
                   )}
                   <p className="image-hint">JPG/PNG up to 5MB</p>
@@ -404,7 +394,7 @@ const BarbershopEdit = () => {
             </div>
 
             <div className="form-group">
-              <label>{t.barbershops.timezone}</label>
+              <label>Timezone</label>
               <select
                 name="timezone"
                 value={formData.timezone}
@@ -423,33 +413,44 @@ const BarbershopEdit = () => {
 
           {/* Opening Hours Section */}
           <div className="form-section">
-            <h2 className="form-section-title">{t.barbershops.openingHours}</h2>
-            <p className="form-section-subtitle">{t.barbershops.openingHoursSubtitle}</p>
+            <h2 className="form-section-title">Opening Hours</h2>
+            <p className="form-section-subtitle">Set opening and closing times for each day (leave blank for closed days)</p>
             <div className="form-grid">
-              {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
-                <div key={day} className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>{dayNames[day]}</label>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input
-                      type="time"
-                      name={`openingHours.${day}.start`}
-                      value={formData.openingHours[day]?.start || ''}
-                      onChange={handleInputChange}
-                      className="input"
-                      placeholder="Open"
-                    />
-                    <span style={{ color: '#6b7280' }}>to</span>
-                    <input
-                      type="time"
-                      name={`openingHours.${day}.end`}
-                      value={formData.openingHours[day]?.end || ''}
-                      onChange={handleInputChange}
-                      className="input"
-                      placeholder="Close"
-                    />
+              {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => {
+                const dayNames = {
+                  mon: 'Monday',
+                  tue: 'Tuesday',
+                  wed: 'Wednesday',
+                  thu: 'Thursday',
+                  fri: 'Friday',
+                  sat: 'Saturday',
+                  sun: 'Sunday'
+                };
+                return (
+                  <div key={day} className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label>{dayNames[day]}</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <input
+                        type="time"
+                        name={`openingHours.${day}.start`}
+                        value={formData.openingHours[day]?.start || ''}
+                        onChange={handleInputChange}
+                        className="input"
+                        placeholder="Open"
+                      />
+                      <span style={{ color: '#6b7280' }}>to</span>
+                      <input
+                        type="time"
+                        name={`openingHours.${day}.end`}
+                        value={formData.openingHours[day]?.end || ''}
+                        onChange={handleInputChange}
+                        className="input"
+                        placeholder="Close"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -458,25 +459,25 @@ const BarbershopEdit = () => {
             disabled={!hasChanges || saving}
             className="btn-primary"
           >
-            {t.barbershops.saveChanges}
+            Save Changes
           </button>
         </form>
 
         {/* ADMIN PASSWORD RESET SECTION */}
         {user.role === 'admin' && (
           <div className="p-6 border-t border-gray-200 mt-6">
-            <h2 className="text-lg font-semibold mb-4">{t.barbershops.adminChangePassword}</h2>
+            <h2 className="text-lg font-semibold mb-4">Admin: Change Barbershop Password</h2>
             <input
               type="password"
               className="input mb-3"
-              placeholder={t.barbershops.newPassword}
+              placeholder="New Password"
               value={adminNewPassword}
               onChange={(e) => setAdminNewPassword(e.target.value)}
             />
             <input
               type="password"
               className="input mb-3"
-              placeholder={t.barbershops.confirmPassword}
+              placeholder="Confirm Password"
               value={adminConfirmPassword}
               onChange={(e) => setAdminConfirmPassword(e.target.value)}
             />
@@ -485,7 +486,7 @@ const BarbershopEdit = () => {
               onClick={handleAdminPasswordChange}
               disabled={saving}
             >
-              {t.barbershops.updatePassword}
+              Update Password
             </button>
           </div>
         )}
@@ -493,25 +494,25 @@ const BarbershopEdit = () => {
         {/* BARBERSHOP OWNER PASSWORD CHANGE */}
         {user.role === 'barbershop' && (
           <div className="p-6 border-t border-gray-300 mt-6">
-            <h2 className="text-lg font-semibold mb-4">{t.barbershops.changeYourPassword}</h2>
+            <h2 className="text-lg font-semibold mb-4">Change Your Password</h2>
             <input
               type="password"
               className="input mb-3"
-              placeholder={t.barbershops.oldPassword}
+              placeholder="Old Password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
             />
             <input
               type="password"
               className="input mb-3"
-              placeholder={t.barbershops.newPassword}
+              placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <input
               type="password"
               className="input mb-3"
-              placeholder={t.barbershops.confirmPassword}
+              placeholder="Confirm New Password"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
             />
@@ -520,7 +521,7 @@ const BarbershopEdit = () => {
               onClick={handleBarbershopPasswordChange}
               disabled={saving}
             >
-              {t.barbershops.changePassword}
+              Change Password
             </button>
           </div>
         )}

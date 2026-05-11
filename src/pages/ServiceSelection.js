@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { serviceAPI } from '../apis/serviceAPI';
 import { employeeAPI } from '../apis/employeeAPI';
 import { useToast } from '../components/Toast';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialService = null, employeeId = null, onBack = null }) => {
   const toast = useToast();
-  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [selectedService, setSelectedService] = useState(initialService);
   const [loading, setLoading] = useState(true);
@@ -52,11 +50,15 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
   // Also validate that the service is available for the current employee
   useEffect(() => {
     if (initialService) {
+      // If employeeId is provided, we need to check if the service is available for that employee
+      // This will be validated when services are loaded
       setSelectedService(initialService);
+      // Only call onServiceSelect if it's a function to avoid unnecessary calls
       if (typeof onServiceSelect === 'function') {
         onServiceSelect(initialService);
       }
     } else {
+      // Clear selected service if initialService is null/undefined
       setSelectedService(null);
     }
   }, [initialService]);
@@ -64,6 +66,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
   // Validate selected service when services are loaded and employeeId changes
   useEffect(() => {
     if (selectedService && employeeId && categories.length > 0) {
+      // Check if the selected service is in the available services for this employee
       const serviceExists = categories.some(([categoryName, categoryServices]) => 
         categoryServices.some(s => 
           s._id?.toString() === selectedService._id?.toString()
@@ -71,6 +74,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
       );
       
       if (!serviceExists) {
+        // Service is not available for this employee, clear it
         console.log('Selected service is not available for this employee, clearing selection');
         setSelectedService(null);
         if (typeof onServiceSelect === 'function') {
@@ -93,6 +97,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
         try {
           const employeeServicesResponse = await serviceAPI.getEmployeeServices(employeeId);
           const employeeServices = employeeServicesResponse.data || employeeServicesResponse;
+          // Extract service IDs from employee services
           employeeServiceIds = new Set(
             (employeeServices || []).map(s => {
               if (typeof s === 'string') return s;
@@ -103,6 +108,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           console.log('Employee service IDs:', Array.from(employeeServiceIds));
         } catch (err) {
           console.error('Error loading employee services:', err);
+          // Continue without filtering if employee services can't be loaded
         }
       }
       
@@ -124,6 +130,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           });
           console.log('Filtered services for employee:', services.length);
         } else {
+          // If employeeId is provided but no services found, show empty list
           services = [];
           console.log('No services found for employee');
         }
@@ -157,14 +164,17 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           let categoryName = 'Other';
           
           if (service.categoryId) {
+            // Case 1: categoryId is populated as an object with name
             if (typeof service.categoryId === 'object' && service.categoryId !== null) {
               if (service.categoryId.name) {
                 categoryName = service.categoryId.name;
               } else if (service.categoryId._id) {
+                // If it's an object but no name, try to look it up
                 const catId = service.categoryId._id.toString();
                 categoryName = categoryMap.get(catId) || 'Other';
               }
             } 
+            // Case 2: categoryId is a string/ID - look it up in the map
             else if (typeof service.categoryId === 'string') {
               categoryName = categoryMap.get(service.categoryId) || 'Other';
             }
@@ -172,14 +182,18 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           
           console.log(`Service "${service.name}" -> Category: "${categoryName}"`);
           
+          // Initialize category array if it doesn't exist
           if (!grouped[categoryName]) {
             grouped[categoryName] = [];
           }
           
+          // Add service to its category
           grouped[categoryName].push(service);
         });
       }
       
+      // Convert to array of [categoryName, services] tuples, sorted by category name
+      // Put "Other" at the end if it exists
       const categoriesArray = Object.entries(grouped)
         .filter(([categoryName, categoryServices]) => categoryServices && categoryServices.length > 0)
         .sort(([nameA], [nameB]) => {
@@ -194,12 +208,12 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
       
       if (categoriesArray.length === 0) {
         const message = employeeId 
-          ? t.booking.noEmployeeServices
-          : t.booking.noServices;
+          ? "This employee doesn't offer any services yet." 
+          : "No services available.";
         toast.warning(message);
       }
     } catch (err) {
-      const errorMessage = err.userMessage || t.booking.loadingServices;
+      const errorMessage = err.userMessage || 'Failed to load services';
       setError(errorMessage);
       toast.error(errorMessage);
       console.error('Error loading services:', err);
@@ -223,7 +237,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
     return (
       <div className="widget-step">
         <div className="loading-spinner mx-auto mb-4"></div>
-        <p className="text-center text-gray-600">{t.booking.loadingServices}</p>
+        <p className="text-center text-gray-600">Loading services...</p>
       </div>
     );
   }
@@ -231,10 +245,10 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
   return (
     <div className="widget-step">
       <div className="step-header">
-        <h2 className="step-title">{t.booking.selectService}</h2>
-        <p className="step-description">{t.booking.selectServiceDesc}</p>
+        <h2 className="step-title">Select Service</h2>
+        <p className="step-description">Choose the service you'd like to book</p>
         <p className="text-sm text-gray-500 text-center mt-1">
-          {t.booking.pricesIn} {barbershopCurrency} ({getCurrencySymbol()})
+          Prices in {barbershopCurrency} ({getCurrencySymbol()})
         </p>
       </div> 
       
@@ -250,8 +264,8 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           <div className="empty-state-small">
             <p className="empty-description">
               {employeeId 
-                ? t.booking.noEmployeeServices
-                : t.booking.noServices}
+                ? "This employee doesn't offer any services yet." 
+                : "This barbershop hasn't set up any services yet."}
             </p>
           </div>
         ) : (
@@ -264,11 +278,12 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
                 <div className="category-header">
                   <h3 className="category-title">{categoryName}</h3>
                   <span className="category-service-count">
-                    {categoryServices.length} {categoryServices.length !== 1 ? t.booking.servicesCount : t.booking.serviceCount}
+                    {categoryServices.length} service{categoryServices.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <div className="services-grid">
                   {categoryServices.map(service => {
+                    // Check if this service is selected (compare by _id)
                     const isSelected = selectedService && (
                       selectedService._id === service._id || 
                       selectedService._id?.toString() === service._id?.toString()
@@ -312,7 +327,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
             className="btn-secondary"
             style={{ marginRight: '8px' }}
           >
-            {t.booking.back}
+            Back
           </button>
         )}
         <button
@@ -320,7 +335,7 @@ const ServiceSelection = ({ barbershopId, onServiceSelect, onNext, initialServic
           disabled={!selectedService}
           className="btn-primary"
         >
-          {employeeId ? t.booking.nextChooseTime : t.booking.nextChooseBarber}
+          {employeeId ? 'Next: Choose Time' : 'Next: Choose Barber'}
         </button>
       </div>
     </div>

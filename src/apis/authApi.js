@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TRANSLATIONS, detectLanguage } from '../contexts/LanguageContext';
+
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -23,26 +23,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Map English backend messages to translation keys
-const MESSAGE_MAP = {
-  'Slot is no longer available': 'slotUnavailable',
-  'Invalid or expired reset token': 'invalidResetToken',
-  'Old password is incorrect': 'oldPasswordIncorrect',
-  'Name & phone are required': 'namePhoneRequired',
-  'Service not found': 'serviceNotFound',
-  'Client not found': 'clientNotFound',
-  'Category is inactive. Cannot add new services.': 'categoryInactive',
-  'Invalid credentials': 'invalidCredentials',
-};
-
 // Handle token refresh on 401 responses and improve error messages
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || '';
+    const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh');
     
     // Handle 401 Unauthorized - try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       
       try {
@@ -59,65 +49,56 @@ api.interceptors.response.use(
         // Refresh failed, redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
     
     // Enhance error object with better messages
     if (error.response) {
-      // Get the correct translation context directly
-      const currentLang = detectLanguage();
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      
+      // Server responded with error status
       const status = error.response.status;
       const data = error.response.data;
       
-      // The original message from the backend
-      const rawMessage = data?.message || data?.error;
+      // Create user-friendly error messages
+      let userMessage = data?.message || data?.error || 'An error occurred';
       
-      // 1. Try to map the exact English string to a translated key
-      if (rawMessage && MESSAGE_MAP[rawMessage] && t.errors[MESSAGE_MAP[rawMessage]]) {
-        error.userMessage = t.errors[MESSAGE_MAP[rawMessage]];
-      } 
-      // 2. Otherwise fall back to a generic translated status message
-      else {
-        switch (status) {
-          case 400:
-            error.userMessage = rawMessage || t.errors.validationFailed || 'Invalid request.';
-            break;
-          case 403:
-            error.userMessage = t.errors.forbidden || 'Permission denied.';
-            break;
-          case 404:
-            error.userMessage = rawMessage || t.errors.notFound || 'Not found.';
-            break;
-          case 409:
-            error.userMessage = rawMessage || 'This action conflicts with existing data.';
-            break;
-          case 422:
-            error.userMessage = rawMessage || t.errors.validationFailed || 'Validation failed.';
-            break;
-          case 500:
-            error.userMessage = t.errors.serverError || 'Server error. Please try again later.';
-            break;
-          case 503:
-            error.userMessage = t.errors.serviceUnavailable || 'Service temporarily unavailable.';
-            break;
-          default:
-            error.userMessage = rawMessage || `Error: ${status}`;
-        }
+      switch (status) {
+        case 400:
+          userMessage = data?.message || 'Invalid request. Please check your input.';
+          break;
+        case 403:
+          userMessage = 'You do not have permission to perform this action.';
+          break;
+        case 404:
+          userMessage = data?.message || 'The requested resource was not found.';
+          break;
+        case 409:
+          userMessage = data?.message || 'This action conflicts with existing data.';
+          break;
+        case 422:
+          userMessage = data?.message || 'Validation failed. Please check your input.';
+          break;
+        case 500:
+          userMessage = 'Server error. Please try again later.';
+          break;
+        case 503:
+          userMessage = 'Service temporarily unavailable. Please try again later.';
+          break;
+        default:
+          userMessage = data?.message || `Error: ${status}`;
       }
+      
+      // Attach user-friendly message to error
+      error.userMessage = userMessage;
     } else if (error.request) {
       // Request was made but no response received
-      const currentLang = detectLanguage();
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      error.userMessage = t.errors?.networkError || 'Network error. Please check your internet connection.';
+      error.userMessage = 'Network error. Please check your internet connection.';
     } else {
       // Something else happened
-      const currentLang = detectLanguage();
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      error.userMessage = t.errors?.genericError || error.message || 'An unexpected error occurred.';
+      error.userMessage = error.message || 'An unexpected error occurred.';
     }
     
     return Promise.reject(error);

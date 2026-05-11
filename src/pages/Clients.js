@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientAPI } from '../apis/clientAPI';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const Clients = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,7 +52,7 @@ const Clients = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner"></div>
-          <p className="text-gray-600">{t.common.loading}</p>
+          <p className="text-gray-600">Loading clients...</p>
         </div>
       </div>
     );
@@ -65,8 +63,8 @@ const Clients = () => {
       {/* HEADER */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">{t.clients.title}</h1>
-          <p className="dash-welcome">{t.clients.subtitle}</p>
+          <h1 className="dash-title">Clients</h1>
+          <p className="dash-welcome">View and manage your clients</p>
         </div>
       </div>
 
@@ -75,7 +73,7 @@ const Clients = () => {
         <div className="form-group">
           <input
             type="text"
-            placeholder={t.clients.searchClients}
+            placeholder="Search by name, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input input-full"
@@ -94,11 +92,11 @@ const Clients = () => {
         {filteredClients.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">👥</div>
-            <h3 className="empty-title">{t.clients.noClientsFound}</h3>
+            <h3 className="empty-title">No Clients Found</h3>
             <p className="empty-description">
               {searchTerm 
                 ? 'No clients match your search criteria.'
-                : t.clients.addFirstClient}
+                : 'You don\'t have any clients yet. Clients will appear here after they book appointments.'}
             </p>
           </div>
         ) : (
@@ -107,11 +105,11 @@ const Clients = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>{t.common.name}</th>
-                    <th>{t.common.email}</th>
-                    <th>{t.common.phone}</th>
-                    <th>{t.common.notes}</th>
-                    <th>{t.common.actions}</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

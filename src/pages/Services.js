@@ -4,7 +4,6 @@ import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const Services = () => {
   const toast = useToast();
@@ -23,7 +22,6 @@ const Services = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   const [serviceFormData, setServiceFormData] = useState({
     name: '',
@@ -119,7 +117,7 @@ const Services = () => {
         duration: parseInt(serviceFormData.duration),
         currency: barbershopCurrency // Use the barbershop currency
       });
-      const successMessage = t.services.serviceCreated;
+      const successMessage = 'Service created successfully!';
       setSuccess(successMessage);
       toast.success(successMessage);
       setShowServiceForm(false);
@@ -144,7 +142,7 @@ const Services = () => {
         duration: parseInt(serviceFormData.duration),
         currency: barbershopCurrency // Use the barbershop currency
       });
-      const successMessage = t.services.serviceUpdated;
+      const successMessage = 'Service updated successfully!';
       setSuccess(successMessage);
       toast.success(successMessage);
       setShowServiceForm(false);
@@ -158,10 +156,10 @@ const Services = () => {
   };
 
   const handleDeleteService = async (serviceId, serviceName) => {
-    if (window.confirm(`${t.services.deactivateConfirm} "${serviceName}"?`)) {
+    if (window.confirm(`Are you sure you want to deactivate "${serviceName}"?`)) {
       try {
         await serviceAPI.deleteService(serviceId);
-        const successMessage = t.services.serviceDeactivated;
+        const successMessage = 'Service deactivated successfully!';
         setSuccess(successMessage);
         toast.success(successMessage);
         loadData();
@@ -176,7 +174,7 @@ const Services = () => {
   const handleRestoreService = async (serviceId, serviceName) => {
     try {
       await serviceAPI.restoreService(serviceId);
-      const successMessage = `"${serviceName}" ${t.services.activated}`;
+      const successMessage = `"${serviceName}" activated successfully!`;
       setSuccess(successMessage);
       toast.success(successMessage);
       loadData();
@@ -198,7 +196,7 @@ const Services = () => {
         ...categoryFormData,
         barbershopId: user.barbershopId
       });
-      const successMessage = t.services.categoryCreated;
+      const successMessage = 'Category created successfully!';
       setSuccess(successMessage);
       toast.success(successMessage);
       setShowCategoryForm(false);
@@ -218,7 +216,7 @@ const Services = () => {
 
     try {
       await serviceAPI.updateCategory(editingCategory._id, categoryFormData);
-      const successMessage = t.services.categoryUpdated;
+      const successMessage = 'Category updated successfully!';
       setSuccess(successMessage);
       toast.success(successMessage);
       setShowCategoryForm(false);
@@ -232,10 +230,10 @@ const Services = () => {
   };
 
   const handleDeleteCategory = async (categoryId, categoryName) => {
-    if (window.confirm(`${t.services.deactivateCategoryConfirm} "${categoryName}" ${t.services.andAllServices}`)) {
+    if (window.confirm(`Are you sure? This will deactivate "${categoryName}" and all its services.`)) {
       try {
         await serviceAPI.deleteCategory(categoryId);
-        const successMessage = t.services.categoryDeactivated;
+        const successMessage = 'Category and its services deactivated successfully!';
         setSuccess(successMessage);
         toast.success(successMessage);
         loadData();
@@ -250,7 +248,7 @@ const Services = () => {
   const handleRestoreCategory = async (categoryId, categoryName) => {
     try {
       await serviceAPI.restoreCategory(categoryId);
-      const successMessage = `"${categoryName}" ${t.services.activated}`;
+      const successMessage = `"${categoryName}" and its services activated successfully!`;
       setSuccess(successMessage);
       toast.success(successMessage);
       loadData();
@@ -332,7 +330,7 @@ const Services = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">{t.common.loading}</p>
+          <p className="text-gray-600">Loading services...</p>
         </div>
       </div>
     );
@@ -344,18 +342,18 @@ const Services = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">{t.services.title}</h1>
-          <p className="dash-welcome">{t.services.subtitle}</p>
+          <h1 className="dash-title">Services & Categories</h1>
+          <p className="dash-welcome">Manage your barbershop services and pricing</p>
           <p className="text-sm text-gray-600 mt-1">
-            {`${t.common.currency}: ${barbershopCurrency} (${getCurrencySymbol()})`}
+            Currency: {barbershopCurrency} ({getCurrencySymbol()})
           </p>
         </div>
         <div className="flex space-x-2">
           <button onClick={() => setShowCategoryForm(true)} className="btn-secondary">
-            {t.services.addCategory}
+            + Add Category
           </button>
           <button onClick={() => setShowServiceForm(true)} className="btn-primary">
-            {t.services.addService}
+            + Add Service
           </button>
         </div>
       </div>
@@ -377,7 +375,7 @@ const Services = () => {
       {showServiceForm && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">{editingService ? t.services.editService : t.services.createService}</h3>
+            <h3 className="section-title">{editingService ? 'Edit Service' : 'Create New Service'}</h3>
             <button
               onClick={() => {
                 setShowServiceForm(false);
@@ -392,7 +390,7 @@ const Services = () => {
           <form onSubmit={editingService ? handleUpdateService : handleCreateService} className="space-y-4">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">{`${t.services.serviceName} *`}</label>
+                <label className="form-label">Service Name *</label>
                 <input
                   type="text"
                   value={serviceFormData.name}
@@ -404,14 +402,14 @@ const Services = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">{`${t.services.category} *`}</label>
+                <label className="form-label">Category *</label>
                 <select
                   value={serviceFormData.categoryId}
                   onChange={(e) => setServiceFormData({ ...serviceFormData, categoryId: e.target.value })}
                   required
                   className="input"
                 >
-                  <option value="">{t.services.selectCategory}</option>
+                  <option value="">Select Category</option>
                   {activeCategories.map(cat => (
                     <option key={cat._id} value={cat._id}>{cat.name}</option>
                   ))}
@@ -419,7 +417,7 @@ const Services = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">{`${t.common.price} (${getCurrencySymbol()}) *`}</label>
+                <label className="form-label">Price ({getCurrencySymbol()}) *</label>
                 <input
                   type="number"
                   step="0.01"
@@ -431,12 +429,12 @@ const Services = () => {
                   placeholder={`0.00 ${getCurrencySymbol()}`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {t.services.currencyNote}
+                  Using {barbershopCurrency} currency from barbershop settings
                 </p>
               </div>
 
               <div className="form-group">
-                <label className="form-label">{`${t.services.durationMinutes} *`}</label>
+                <label className="form-label">Duration (minutes) *</label>
                 <input
                   type="number"
                   min="1"
@@ -449,7 +447,7 @@ const Services = () => {
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">{t.common.description}</label>
+                <label className="form-label">Description</label>
                 <textarea
                   value={serviceFormData.description}
                   onChange={(e) => setServiceFormData({ ...serviceFormData, description: e.target.value })}
@@ -462,7 +460,7 @@ const Services = () => {
 
             <div className="flex space-x-3 pt-4">
               <button type="submit" className="btn-primary">
-                {editingService ? t.services.updateService : t.services.createService}
+                {editingService ? 'Update Service' : 'Create Service'}
               </button>
               <button
                 type="button"
@@ -472,7 +470,7 @@ const Services = () => {
                 }}
                 className="btn-secondary"
               >
-                {t.common.cancel}
+                Cancel
               </button>
             </div>
           </form>
@@ -483,7 +481,7 @@ const Services = () => {
       {showCategoryForm && (
         <div className="card-surface fade-in mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title">{editingCategory ? t.services.editCategory : t.services.createCategory}</h3>
+            <h3 className="section-title">{editingCategory ? 'Edit Category' : 'Create New Category'}</h3>
             <button
               onClick={() => {
                 setShowCategoryForm(false);
@@ -498,7 +496,7 @@ const Services = () => {
           <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="space-y-4">
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">{`${t.services.categoryName} *`}</label>
+                <label className="form-label">Category Name *</label>
                 <input
                   type="text"
                   value={categoryFormData.name}
@@ -510,7 +508,7 @@ const Services = () => {
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">{t.common.description}</label>
+                <label className="form-label">Description</label>
                 <textarea
                   value={categoryFormData.description}
                   onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
@@ -523,7 +521,7 @@ const Services = () => {
 
             <div className="flex space-x-3 pt-4">
               <button type="submit" className="btn-primary">
-                {editingCategory ? t.services.updateCategory : t.services.createCategory}
+                {editingCategory ? 'Update Category' : 'Create Category'}
               </button>
               <button
                 type="button"
@@ -533,7 +531,7 @@ const Services = () => {
                 }}
                 className="btn-secondary"
               >
-                {t.common.cancel}
+                Cancel
               </button>
             </div>
           </form>
@@ -551,7 +549,7 @@ const Services = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            {`${t.common.active} (${activeServicesCount})`}
+            Active ({activeServicesCount})
           </button>
           <button
             onClick={() => setActiveFilter('inactive')}
@@ -561,7 +559,7 @@ const Services = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            {`${t.common.inactive} (${inactiveServicesCount})`}
+            Inactive ({inactiveServicesCount})
           </button>
           <button
             onClick={() => setActiveFilter('all')}
@@ -571,14 +569,14 @@ const Services = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            {`${t.common.all} (${services.length})`}
+            All ({services.length})
           </button>
         </div>
 
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder={t.services.searchServices}
+            placeholder="Search services..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input"
@@ -591,22 +589,22 @@ const Services = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="section-title1">Categories</h3>
           <span className="text-sm text-gray-500">
-            {categories.filter(c => c.isActive).length} {t.common.active}
+            {categories.filter(c => c.isActive).length} active
           </span>
         </div>
 
         {categories.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📁</div>
-            <h3 className="empty-title">{t.services.noCategoriesFound}</h3>
+            <h3 className="empty-title">No Categories Found</h3>
             <p className="empty-description">
-              {t.services.createFirstCategory}
+              Create your first category to organize services
             </p>
             <button
               onClick={() => setShowCategoryForm(true)}
               className="btn-primary"
             >
-              {t.services.addCategory}
+              Add Category
             </button>
           </div>
         ) : (
@@ -618,7 +616,7 @@ const Services = () => {
                     {category.name.charAt(0).toUpperCase()}
                   </div>
                   <span className={`status-badge ${category.isActive ? 'status-active' : 'status-inactive'}`}>
-                    {category.isActive ? t.common.active : t.common.inactive}
+                    {category.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
@@ -649,21 +647,21 @@ const Services = () => {
                     onClick={() => handleEditCategory(category)}
                     className="action-btn action-primary"
                   >
-                    {t.common.edit}
+                    Edit
                   </button>
                   {category.isActive ? (
                     <button
                       onClick={() => handleDeleteCategory(category._id, category.name)}
                       className="action-btn action-secondary"
                     >
-                      {t.common.deactivate}
+                      Deactivate
                     </button>
                   ) : (
                     <button
                       onClick={() => handleRestoreCategory(category._id, category.name)}
                       className="action-btn action-primary"
                     >
-                      {t.common.activate}
+                      Activate
                     </button>
                   )}
                 </div>
@@ -679,13 +677,13 @@ const Services = () => {
         {filteredServices.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">✂️</div>
-            <h3 className="empty-title">{t.services.noServicesFound}</h3>
+            <h3 className="empty-title">No Services Found</h3>
             <p className="empty-description">
               {searchTerm
-                ? t.employees.adjustSearch
+                ? 'Try adjusting your search terms'
                 : activeFilter === 'inactive'
-                  ? t.employees.allEmployeesActive
-                  : t.services.createFirstService
+                  ? 'All services are currently active'
+                  : 'Get started by creating your first service'
               }
             </p>
             {!searchTerm && activeFilter === 'active' && (
@@ -693,7 +691,7 @@ const Services = () => {
                 onClick={() => setShowServiceForm(true)}
                 className="btn-primary"
               >
-                {t.services.addService}
+                Add Service
               </button>
             )}
           </div>
@@ -707,11 +705,11 @@ const Services = () => {
                       {service.name}
                     </h4>
                     <span className="service-tag">
-                      {service.categoryId?.name || t.services.uncategorized}
+                      {service.categoryId?.name || 'Uncategorized'}
                     </span>
                   </div>
                   <span className={`status-badge ${service.isActive ? 'status-active' : 'status-inactive'}`}>
-                    {service.isActive ? t.common.active : t.common.inactive}
+                    {service.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
@@ -733,21 +731,21 @@ const Services = () => {
                     onClick={() => handleEditService(service)}
                     className="action-btn action-primary"
                   >
-                    {t.common.edit}
+                    Edit
                   </button>
                   {service.isActive ? (
                     <button
                       onClick={() => handleDeleteService(service._id, service.name)}
                       className="action-btn action-secondary"
                     >
-                      {t.common.deactivate}
+                      Deactivate
                     </button>
                   ) : (
                     <button
                       onClick={() => handleRestoreService(service._id, service.name)}
                       className="action-btn action-primary"
                     >
-                      {t.common.activate}
+                      Activate
                     </button>
                   )}
                 </div>

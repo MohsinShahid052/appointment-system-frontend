@@ -4,7 +4,6 @@ import { agendaAPI } from '../apis/agendaAPI';
 import { employeeAPI } from '../apis/employeeAPI';
 import { appointmentAPI } from '../apis/appointmentAPI';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 import AppointmentDetail from '../components/AppointmentDetail';
 import '../styles/global.css';
 
@@ -146,7 +145,6 @@ const getAppointmentStyle = (startTime, duration, timeSlots) => {
 const Agenda = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [employees, setEmployees] = useState([]);
   const [selectedDate, setSelectedDate] = useState(getTodayISO());
   const [dayData, setDayData] = useState(null);
@@ -283,7 +281,7 @@ const Agenda = () => {
       <div className="center-screen">
         <div className="text-center fade-in">
           <div className="loading-spinner" style={{ margin: '0 auto 14px' }}></div>
-          <p style={{ color: '#6b7280' }}>{t.common.loading}</p>
+          <p style={{ color: '#6b7280' }}>Loading schedule...</p>
         </div>
       </div>
     );
@@ -294,8 +292,8 @@ const Agenda = () => {
       {/* HEADER */}
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">{t.agenda.title}</h1>
-          <p className="dash-welcome">{t.agenda.subtitle}</p>
+          <h1 className="dash-title">Agenda</h1>
+          <p className="dash-welcome">Daily overview of appointments</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
@@ -303,10 +301,10 @@ const Agenda = () => {
             className="btn-primary"
             style={{ padding: '10px 20px', fontSize: '14px' }}
           >
-            + {t.appointments.addAppointment}
+            + Add Appointment
           </button>
         <div className="agenda-timezone">
-          Timezone: {zone || t.common.loading}
+          Timezone: {zone || 'Loading...'}
           </div>
         </div>
       </div>
@@ -323,7 +321,7 @@ const Agenda = () => {
               </div>
             </div>
             <button onClick={() => navigateDay(1)} className="btn-secondary">Next →</button>
-            <button onClick={jumpToToday} className="btn-secondary small-btn">{t.common.today}</button>
+            <button onClick={jumpToToday} className="btn-secondary small-btn">Today</button>
             <div className="jump-date">
               <span className="label-small">Jump to:</span>
               <input 
@@ -348,7 +346,7 @@ const Agenda = () => {
         <div className="agenda-wrapper">
           {/* Header row with employee names */}
           <div className="agenda-grid-header">
-            <div className="time-column-header">{t.common.time}</div>
+            <div className="time-column-header">Time</div>
             {activeEmployees.map(emp => (
               <div key={emp._id} className="employee-column-header">
                 <div className="employee-avatar-small">
@@ -475,7 +473,7 @@ const Agenda = () => {
         {activeEmployees.length === 0 && (
           <div className="empty-state">
             <div className="empty-state-icon">👥</div>
-            <h3 className="empty-title">{t.agenda.noAppointmentsToday}</h3>
+            <h3 className="empty-title">No Active Employees</h3>
             <p className="empty-description">
               There are no active employees to display in the agenda.
             </p>
@@ -488,7 +486,7 @@ const Agenda = () => {
         <div className="legend">
           <div className="legend-item">
             <div className="legend-color appointment-color"></div>
-            <span>{t.appointments.title}</span>
+            <span>Appointments</span>
           </div>
           <div className="legend-description">
             Each block shows client name and service. Height represents duration. Click to view details.

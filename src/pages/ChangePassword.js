@@ -3,14 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../apis/authApi';
 import { useToast } from '../components/Toast';
-import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const ChangePassword = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -75,8 +73,8 @@ const ChangePassword = () => {
     <div className="dashboard-container fade-in">
       <div className="dashboard-header">
         <div>
-          <h1 className="dash-title">{t.auth.changePassword}</h1>
-          <p className="dash-welcome">{t.dashboard.changePasswordDesc}</p>
+          <h1 className="dash-title">Change Password</h1>
+          <p className="dash-welcome">Update your account password</p>
         </div>
       </div>
 
@@ -96,7 +94,7 @@ const ChangePassword = () => {
           )}
 
           <div className="form-group">
-            <label className="form-label">{t.auth.oldPassword} *</label>
+            <label className="form-label">Current Password *</label>
             <input
               type="password"
               name="oldPassword"
@@ -109,7 +107,7 @@ const ChangePassword = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">{t.auth.newPassword} *</label>
+            <label className="form-label">New Password *</label>
             <input
               type="password"
               name="newPassword"
@@ -126,7 +124,7 @@ const ChangePassword = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">{t.auth.confirmPassword} *</label>
+            <label className="form-label">Confirm New Password *</label>
             <input
               type="password"
               name="confirmPassword"
@@ -145,14 +143,14 @@ const ChangePassword = () => {
               className="btn-secondary"
               disabled={loading}
             >
-              {t.common.cancel}
+              Cancel
             </button>
             <button
               type="submit"
               className="btn-primary"
               disabled={loading}
             >
-              {loading ? t.auth.updating : t.auth.changePassword}
+              {loading ? 'Changing Password...' : 'Change Password'}
             </button>
           </div>
         </form>

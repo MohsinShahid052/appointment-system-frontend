@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { language, setLanguage, t } = useLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -29,7 +28,7 @@ const Layout = ({ children }) => {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: '#f8fafc' }}>
+    <div className="min-h-screen" style={{ background: '#ffffff' }}>
       
       {/* Navigation */}
       <nav className="navbar">
@@ -45,13 +44,13 @@ const Layout = ({ children }) => {
           <div className="nav-right desktop-nav">
             
             <NavigationLink to="/dashboard" icon="📊">
-              {t.nav.dashboard}
+              Dashboard
             </NavigationLink>
 
             {/* Admin Navigation */}
             {user?.role === 'admin' && (
               <NavigationLink to="/barbershops" icon="✂️">
-                {t.nav.barbershops}
+                Barbershops
               </NavigationLink>
             )}
 
@@ -59,28 +58,28 @@ const Layout = ({ children }) => {
             {user?.role === 'barbershop' && (
               <>
                 <NavigationLink to="/employees" icon="👥">
-                  {t.nav.employees}
+                  Employees
                 </NavigationLink>
 
                 <NavigationLink to="/services" icon="✂️">
-                  {t.nav.services}
+                  Services
                 </NavigationLink>
 
                 <NavigationLink to="/agenda" icon="📅">
-                  {t.nav.schedule}
+                  Schedule
                 </NavigationLink>
 
                 <NavigationLink to="/timeoff" icon="🏖️">
-                  {t.nav.timeOff}
+                  Time Off
                 </NavigationLink>
 
                 <NavigationLink to="/clients" icon="👤">
-                  {t.nav.clients}
+                  Clients
                 </NavigationLink>
 
                 {user?.barbershopId && (
                   <NavigationLink to={`/barbershop/edit/${user.barbershopId}`} icon="🏪">
-                    {t.nav.myBarbershop}
+                    My Barbershop
                   </NavigationLink>
                 )}
               </>
@@ -89,7 +88,7 @@ const Layout = ({ children }) => {
         </div>
 
         {/* User Menu */}
-        <div className="flex items-center space-x-4">
+        <div className="header-right-controls">
           
           {/* User Info */}
           <div className="hidden sm:flex items-center space-x-3">
@@ -103,38 +102,6 @@ const Layout = ({ children }) => {
             </div>
           </div>
 
-          {/* Language Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '8px' }}>
-            {[
-              { code: 'en', label: 'EN', flag: '🇬🇧' },
-              { code: 'nl', label: 'NL', flag: '🇳🇱' },
-              { code: 'ku', label: 'KU', flag: '🌙' },
-            ].map(({ code, label, flag }) => (
-              <button
-                key={code}
-                onClick={() => setLanguage(code)}
-                title={code === 'en' ? 'English' : code === 'nl' ? 'Nederlands' : 'Kurdî'}
-                style={{
-                  padding: '3px 7px',
-                  fontSize: '11px',
-                  fontWeight: language === code ? '700' : '400',
-                  border: language === code ? '1px solid #6366f1' : '1px solid transparent',
-                  borderRadius: '4px',
-                  background: language === code ? '#ede9fe' : 'transparent',
-                  color: language === code ? '#4338ca' : '#6b7280',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '2px',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <span>{flag}</span>
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-
           {/* Logout Button */}
           <button
             onClick={handleLogout}
@@ -143,8 +110,10 @@ const Layout = ({ children }) => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            {t.nav.logout}
+            Logout
           </button>
+
+          <LanguageSwitcher />
 
           {/* Mobile Menu Button */}
           <button
@@ -165,13 +134,13 @@ const Layout = ({ children }) => {
           <div className="space-y-2 px-4">
             
             <NavigationLink to="/dashboard" icon="📊">
-              {t.nav.dashboard}
+              Dashboard
             </NavigationLink>
 
             {/* Admin Mobile Navigation */}
             {user?.role === 'admin' && (
               <NavigationLink to="/barbershops" icon="✂️">
-                {t.nav.barbershops}
+                Barbershops
               </NavigationLink>
             )}
 
@@ -179,17 +148,17 @@ const Layout = ({ children }) => {
             {user?.role === 'barbershop' && (
               <>
                 <NavigationLink to="/employees" icon="👥">
-                  {t.nav.employees}
+                  Employees
                 </NavigationLink>
                 <NavigationLink to="/services" icon="✂️">
-                  {t.nav.services}
+                  Services
                 </NavigationLink>
                 <NavigationLink to="/timeoff" icon="📅">
-                  {t.nav.timeOff}
+                  Time Off
                 </NavigationLink>
                 {user?.barbershopId && (
                   <NavigationLink to={`/barbershop/edit/${user.barbershopId}`} icon="🏪">
-                    {t.nav.myBarbershop}
+                    My Barbershop
                   </NavigationLink>
                 )}
               </>
@@ -212,41 +181,12 @@ const Layout = ({ children }) => {
               </div>
             </div>
 
-            {/* Mobile Language Switcher */}
-            <div className="pt-3 border-t border-gray-200 mt-2">
-              <div className="text-xs text-gray-500 mb-2">Language / Taal / زمان</div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {[
-                  { code: 'en', label: 'English', flag: '🇬🇧' },
-                  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
-                  { code: 'ku', label: 'Kurdî', flag: '🌙' },
-                ].map(({ code, label, flag }) => (
-                  <button
-                    key={code}
-                    onClick={() => { setLanguage(code); setIsMobileMenuOpen(false); }}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '12px',
-                      fontWeight: language === code ? '700' : '400',
-                      border: language === code ? '1px solid #6366f1' : '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      background: language === code ? '#ede9fe' : 'white',
-                      color: language === code ? '#4338ca' : '#374151',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {flag} {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="dashboard-container">
+      <main className="app-main-content">
         {children}
       </main>
     </div>

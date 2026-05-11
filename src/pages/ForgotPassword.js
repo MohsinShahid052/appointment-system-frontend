@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../apis/authApi';
 import { useToast } from '../components/Toast';
-import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/global.css';
 
 const ForgotPassword = () => {
   const toast = useToast();
-  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,8 +28,9 @@ const ForgotPassword = () => {
       setSuccess(true);
       toast.success('If that email exists, a password reset link has been sent.');
     } catch (err) {
-      setError(err.userMessage || err.message || 'Failed to send reset email');
-      toast.error(err.userMessage || err.message || 'Failed to send reset email');
+      const message = err.userMessage || err.message || 'Failed to send reset email';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -49,7 +48,7 @@ const ForgotPassword = () => {
             letterSpacing: '-0.03em'
           }}
         >
-          {t.auth.forgotPasswordTitle}
+          Forgot Password
         </h2>
 
         <p
@@ -60,7 +59,7 @@ const ForgotPassword = () => {
             marginBottom: 16
           }}
         >
-          {t.auth.forgotPasswordSubtitle}
+          Enter your email address and we'll send you a link to reset your password
         </p>
 
         {error && (
@@ -98,7 +97,7 @@ const ForgotPassword = () => {
             <input
               type="email"
               className="input"
-              placeholder={t.auth.emailAddress}
+              placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -107,7 +106,7 @@ const ForgotPassword = () => {
             />
 
             <button className="btn-primary" disabled={loading}>
-              {loading ? t.auth.sending : t.auth.sendResetLink}
+                {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
           </form>
         ) : (
@@ -123,7 +122,7 @@ const ForgotPassword = () => {
                 fontSize: '14px'
               }}
             >
-              {t.auth.backToLogin}
+              Back to Login
             </Link>
           </div>
         )}
@@ -137,7 +136,7 @@ const ForgotPassword = () => {
               fontSize: '13px'
             }}
           >
-            ← {t.auth.backToLogin}
+            ← Back to Login
           </Link>
         </div>
       </div>

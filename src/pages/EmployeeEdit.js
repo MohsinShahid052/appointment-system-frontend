@@ -4,13 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { employeeAPI } from '../apis/employeeAPI';
 import { serviceAPI } from '../apis/serviceAPI';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 
 const EmployeeEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
   const isCreating = !id;
   
   const [employee, setEmployee] = useState(null);
@@ -111,7 +109,7 @@ const EmployeeEdit = () => {
       });
       setPhotoPreview(data.photo || '');
     } catch (err) {
-      setError(err.response?.data?.message || t.employeeEdit.loadingEmployee);
+      setError(err.response?.data?.message || 'Failed to load employee details');
     } finally {
       setLoading(false);
     }
@@ -138,14 +136,14 @@ const EmployeeEdit = () => {
 
       if (isCreating) {
         await employeeAPI.createEmployee(employeeData);
-        setSuccess(t.employeeEdit.createdSuccess);
+        setSuccess('Employee created successfully!');
         setTimeout(() => navigate('/employees'), 2000);
       } else {
         await employeeAPI.updateEmployee(id, employeeData);
-        setSuccess(t.employeeEdit.updatedSuccess);
+        setSuccess('Employee updated successfully!');
       }
     } catch (err) {
-      setError(err.response?.data?.message || (isCreating ? t.employeeEdit.createdSuccess : t.employeeEdit.updatedSuccess));
+      setError(err.response?.data?.message || `Failed to ${isCreating ? 'create' : 'update'} employee`);
     } finally {
       setSaving(false);
     }
@@ -364,7 +362,7 @@ const EmployeeEdit = () => {
     <div className="center-screen">
       <div className="text-center fade-in">
         <div className="loading-spinner mx-auto mb-4"></div>
-        <p className="text-gray-600">{t.employeeEdit.loadingEmployee}</p>
+        <p className="text-gray-600">Loading employee details...</p>
       </div>
     </div>
   );
@@ -374,13 +372,13 @@ const EmployeeEdit = () => {
       <div className="card-surface fade-in">
         <div className="px-6 py-4 border-b border-gray-200">
           <h1 className="dash-title">
-            {isCreating ? t.employeeEdit.addTitle : t.employeeEdit.editTitle}
+            {isCreating ? 'Add New Employee' : 'Edit Employee'}
           </h1>
           <p className="dash-welcome">
-            {isCreating ? t.employeeEdit.createProfile : `Employee ID: ${id}`}
+            {isCreating ? 'Create a new employee profile' : `Employee ID: ${id}`}
           </p>
           <div className="text-xs text-gray-500 mt-1">
-            {t.employeeEdit.availableServices}: {services.length} {t.employeeEdit.activeServices} • Categories: {categories.length} {t.employeeEdit.activeCategories}
+            Available Services: {services.length} active • Categories: {categories.length} active
           </div>
         </div>
 
@@ -399,13 +397,13 @@ const EmployeeEdit = () => {
 
           {/* Photo Upload */}
           <div className="form-section">
-            <h3 className="form-section-title">{t.employeeEdit.profilePhoto}</h3>
+            <h3 className="form-section-title">Profile Photo</h3>
             <div className="image-upload">
               <div className="image-preview" style={{ borderRadius: '999px' }}>
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" />
                 ) : (
-                  <span className="image-placeholder">{t.employeeEdit.noPhoto}</span>
+                  <span className="image-placeholder">No photo</span>
                 )}
               </div>
 
@@ -417,14 +415,14 @@ const EmployeeEdit = () => {
                     onChange={handlePhotoUpload}
                     className="hidden"
                   />
-                  {uploadingPhoto ? t.employeeEdit.uploading : t.employeeEdit.uploadPhoto}
+                  {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
                 </label>
                 <button
                   type="button"
                   onClick={handleTakePhoto}
                   className="btn-secondary"
                 >
-                  {t.employeeEdit.takePhoto}
+                  Take Photo
                 </button>
                 {photoPreview && (
                   <button
@@ -432,20 +430,20 @@ const EmployeeEdit = () => {
                     onClick={handleRemovePhoto}
                     className="btn-secondary"
                   >
-                    {t.employeeEdit.remove}
+                    Remove
                   </button>
                 )}
-                <p className="image-hint">{t.employeeEdit.imageHint}</p>
+                <p className="image-hint">JPG/PNG up to 5MB</p>
               </div>
             </div>
           </div>
 
           {/* Basic Information Section */}
           <div className="form-section">
-            <h3 className="form-section-title">{t.employeeEdit.basicInfo}</h3>
+            <h3 className="form-section-title">Basic Information</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">{t.employeeEdit.fullName} *</label>
+                <label className="form-label">Full Name *</label>
                 <input
                   type="text"
                   name="name"
@@ -453,55 +451,55 @@ const EmployeeEdit = () => {
                   onChange={handleInputChange}
                   required
                   className="input"
-                  placeholder={`Enter employee name`}
+                  placeholder="Enter employee name"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">{t.employeeEdit.email}</label>
+                <label className="form-label">Email</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   className="input"
-                  placeholder={`Enter email address`}
+                  placeholder="Enter email address"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">{t.employeeEdit.phone}</label>
+                <label className="form-label">Phone</label>
                 <input
                   type="text"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="input"
-                  placeholder={`Enter phone number`}
+                  placeholder="Enter phone number"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">{t.employeeEdit.status}</label>
+                <label className="form-label">Status</label>
                 <select
                   name="isActive"
                   value={formData.isActive}
                   onChange={handleInputChange}
                   className="input"
                 >
-                  <option value={true}>{t.employeeEdit.active}</option>
-                  <option value={false}>{t.employeeEdit.inactive}</option>
+                  <option value={true}>Active</option>
+                  <option value={false}>Inactive</option>
                 </select>
               </div>
 
               <div className="md:col-span-2 form-group">
-                <label className="form-label">{t.employeeEdit.notes}</label>
+                <label className="form-label">Notes</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
                   className="input"
-                  placeholder={t.employeeEdit.notesPlaceholder}
+                  placeholder="Additional notes"
                   rows="3"
                 />
               </div>
@@ -511,17 +509,18 @@ const EmployeeEdit = () => {
           {/* Services Assignment Section */}
           <div className="form-section">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="form-section-title">{t.employeeEdit.assignedServices}</h3>
+              <h3 className="form-section-title">Assigned Services</h3>
               <div className="text-sm text-gray-500">
-                {getSelectedServicesCount()} {t.employeeEdit.servicesSelected}
+                {getSelectedServicesCount()} service(s) selected
               </div>
             </div>
             
             {categories.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <p className="text-gray-600">{t.employeeEdit.noCategories}</p>
+
+                <p className="text-gray-600">No active categories available</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {t.employeeEdit.noCategoriesDesc}
+                  Create active categories and services first to assign to employees
                 </p>
               </div>
             ) : (
@@ -560,7 +559,7 @@ const EmployeeEdit = () => {
                         </div>
                         <span className="service-category-count">
                           {getSelectedServicesInCategoryCount(category._id)}
-                          /{categoryServices.length} {t.employeeEdit.selected}
+                          /{categoryServices.length} selected
                         </span>
                       </div>
 
@@ -612,11 +611,11 @@ const EmployeeEdit = () => {
                     <div className="service-category-card">
                       <div className="service-category-header">
                         <h4 className="service-category-title">
-                          {t.employeeEdit.uncategorized}
+                          Uncategorized Services
                         </h4>
                         <span className="service-category-count">
                           {uncategorizedServices.filter(s => isServiceSelected(s._id)).length}
-                          /{uncategorizedServices.length} {t.employeeEdit.selected}
+                          /{uncategorizedServices.length} selected
                         </span>
                       </div>
                       <div className="service-list">
@@ -659,7 +658,7 @@ const EmployeeEdit = () => {
 
           {/* Working Hours Section */}
           <div className="form-section">
-            <h3 className="form-section-title">{t.employeeEdit.workingHours}</h3>
+            <h3 className="form-section-title">Working Hours</h3>
             <div className="space-y-3">
               {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
                 <div key={day} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
@@ -671,12 +670,12 @@ const EmployeeEdit = () => {
                       className="rounded"
                     />
                     <span className="capitalize font-medium">
-                      {day === 'mon' ? t.timeOff.monday :
-                       day === 'tue' ? t.timeOff.tuesday :
-                       day === 'wed' ? t.timeOff.wednesday :
-                       day === 'thu' ? t.timeOff.thursday :
-                       day === 'fri' ? t.timeOff.friday :
-                       day === 'sat' ? t.timeOff.saturday : t.timeOff.sunday}
+                      {day === 'mon' ? 'Monday' :
+                       day === 'tue' ? 'Tuesday' :
+                       day === 'wed' ? 'Wednesday' :
+                       day === 'thu' ? 'Thursday' :
+                       day === 'fri' ? 'Friday' :
+                       day === 'sat' ? 'Saturday' : 'Sunday'}
                     </span>
                   </label>
                   
@@ -708,7 +707,7 @@ const EmployeeEdit = () => {
               onClick={() => navigate('/employees')}
               className="btn-secondary"
             >
-              {t.employeeEdit.cancel}
+              Cancel
             </button>
             <button
               type="submit"
@@ -719,10 +718,10 @@ const EmployeeEdit = () => {
               {saving ? (
                 <div className="flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  {isCreating ? t.employeeEdit.creating : t.employeeEdit.saving}
+                  {isCreating ? 'Creating...' : 'Saving...'}
                 </div>
               ) : (
-                isCreating ? t.employeeEdit.createEmployee : t.employeeEdit.saveChanges
+                isCreating ? 'Create Employee' : 'Save Changes'
               )}
             </button>
           </div>
